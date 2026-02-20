@@ -34,6 +34,48 @@ pub const DeraineVector = extern struct {
     }
 };
 
+pub const HNSW_M = 16; // Max connections per layer
+pub const HNSW_EF_CONSTRUCTION = 128;
+pub const HNSW_MAX_LEVEL = 16;
+
+pub const IndexHeader = extern struct {
+    magic: [8]u8,
+    version: u32,
+    entry_point_id: u64,
+    max_level: i32,
+    m_value: u32,
+    padding: [32]u8,
+
+    comptime {
+        if (@sizeOf(IndexHeader) != 64) {
+            @compileError("IndexHeader must be exactly 64 bytes");
+        }
+    }
+};
+
+// Adjacency block for a single vector at a single level
+pub const AdjacencyBlock = extern struct {
+    neighbor_count: u32,
+    neighbors: [HNSW_M]u64,
+    padding: [60]u8, // Total 4 + 128 + 60 = 192 bytes. Aligned to 64.
+};
+
+pub const IndexNode = extern struct {
+    max_level: i32,
+    // Each node can have up to HNSW_MAX_LEVEL levels.
+    layers: [HNSW_MAX_LEVEL]AdjacencyBlock,
+
+    comptime {
+        const expected_size = @sizeOf(i32) + (@sizeOf(AdjacencyBlock) * HNSW_MAX_LEVEL);
+        _ = expected_size;
+    }
+};
+
+pub const SearchMode = enum(i32) {
+    Flat = 0,
+    HNSW = 1,
+};
+
 export fn deraine_init() i32 {
     return 0;
 }
@@ -124,13 +166,15 @@ export fn deraine_search(
     k: u32,
     out_ids: [*]u64,
     out_distances: [*]f32,
+    mode: i32,
 ) i32 {
     const query = query_ptr[0..query_len];
+    const search_mode: SearchMode = @enumFromInt(mode);
 
-    const matches = storage_ptr.search(query, filter_tag, k, out_ids, out_distances) catch |err| {
+    const matches = storage_ptr.search(query, filter_tag, k, out_ids, out_distances, search_mode) catch |err| {
         std.debug.print("Search Error: {}\n", .{err});
         return -1;
     };
 
-    return @intCast(matches);
+    return @as(i32, @intCast(matches));
 }

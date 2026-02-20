@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rderaine.proto\x12\nderaine.v1\";\n\x12WriteVectorRequest\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x0b\n\x03tag\x18\x02 \x01(\r\x12\x0c\n\x04\x64\x61ta\x18\x03 \x03(\x02\"&\n\x13WriteVectorResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"G\n\x10SearchKNNRequest\x12\x14\n\x0cquery_vector\x18\x01 \x03(\x02\x12\t\n\x01k\x18\x02 \x01(\r\x12\x12\n\nfilter_tag\x18\x03 \x01(\r\"7\n\x11SearchKNNResponse\x12\"\n\x07matches\x18\x01 \x03(\x0b\x32\x11.deraine.v1.Match\"%\n\x05Match\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x10\n\x08\x64istance\x18\x02 \x01(\x02\"!\n\x13\x44\x65leteVectorRequest\x12\n\n\x02id\x18\x01 \x01(\x04\"\'\n\x14\x44\x65leteVectorResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x11\n\x0fGetStatsRequest\"D\n\x10GetStatsResponse\x12\x14\n\x0cvector_count\x18\x01 \x01(\x04\x12\x1a\n\x12memory_usage_bytes\x18\x02 \x01(\x04\x32\xc4\x02\n\x0e\x44\x65raineService\x12N\n\x0bWriteVector\x12\x1e.deraine.v1.WriteVectorRequest\x1a\x1f.deraine.v1.WriteVectorResponse\x12H\n\tSearchKNN\x12\x1c.deraine.v1.SearchKNNRequest\x1a\x1d.deraine.v1.SearchKNNResponse\x12Q\n\x0c\x44\x65leteVector\x12\x1f.deraine.v1.DeleteVectorRequest\x1a .deraine.v1.DeleteVectorResponse\x12\x45\n\x08GetStats\x12\x1b.deraine.v1.GetStatsRequest\x1a\x1c.deraine.v1.GetStatsResponseB+Z)github.com/ricardo/deraine-db/api/grpc/pbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rderaine.proto\x12\nderaine.v1\";\n\x12WriteVectorRequest\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x0b\n\x03tag\x18\x02 \x01(\r\x12\x0c\n\x04\x64\x61ta\x18\x03 \x03(\x02\"&\n\x13WriteVectorResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"m\n\x10SearchKNNRequest\x12\x14\n\x0cquery_vector\x18\x01 \x03(\x02\x12\t\n\x01k\x18\x02 \x01(\r\x12\x12\n\nfilter_tag\x18\x03 \x01(\r\x12$\n\x04mode\x18\x04 \x01(\x0e\x32\x16.deraine.v1.SearchMode\"7\n\x11SearchKNNResponse\x12\"\n\x07matches\x18\x01 \x03(\x0b\x32\x11.deraine.v1.Match\"%\n\x05Match\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x10\n\x08\x64istance\x18\x02 \x01(\x02\"!\n\x13\x44\x65leteVectorRequest\x12\n\n\x02id\x18\x01 \x01(\x04\"\'\n\x14\x44\x65leteVectorResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x11\n\x0fGetStatsRequest\"D\n\x10GetStatsResponse\x12\x14\n\x0cvector_count\x18\x01 \x01(\x04\x12\x1a\n\x12memory_usage_bytes\x18\x02 \x01(\x04*.\n\nSearchMode\x12\x0f\n\x0bSEARCH_FLAT\x10\x00\x12\x0f\n\x0bSEARCH_HNSW\x10\x01\x32\xc4\x02\n\x0e\x44\x65raineService\x12N\n\x0bWriteVector\x12\x1e.deraine.v1.WriteVectorRequest\x1a\x1f.deraine.v1.WriteVectorResponse\x12H\n\tSearchKNN\x12\x1c.deraine.v1.SearchKNNRequest\x1a\x1d.deraine.v1.SearchKNNResponse\x12Q\n\x0c\x44\x65leteVector\x12\x1f.deraine.v1.DeleteVectorRequest\x1a .deraine.v1.DeleteVectorResponse\x12\x45\n\x08GetStats\x12\x1b.deraine.v1.GetStatsRequest\x1a\x1c.deraine.v1.GetStatsResponseB+Z)github.com/ricardo/deraine-db/api/grpc/pbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,24 +32,26 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'deraine_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z)github.com/ricardo/deraine-db/api/grpc/pb'
+  _globals['_SEARCHMODE']._serialized_start=502
+  _globals['_SEARCHMODE']._serialized_end=548
   _globals['_WRITEVECTORREQUEST']._serialized_start=29
   _globals['_WRITEVECTORREQUEST']._serialized_end=88
   _globals['_WRITEVECTORRESPONSE']._serialized_start=90
   _globals['_WRITEVECTORRESPONSE']._serialized_end=128
   _globals['_SEARCHKNNREQUEST']._serialized_start=130
-  _globals['_SEARCHKNNREQUEST']._serialized_end=201
-  _globals['_SEARCHKNNRESPONSE']._serialized_start=203
-  _globals['_SEARCHKNNRESPONSE']._serialized_end=258
-  _globals['_MATCH']._serialized_start=260
-  _globals['_MATCH']._serialized_end=297
-  _globals['_DELETEVECTORREQUEST']._serialized_start=299
-  _globals['_DELETEVECTORREQUEST']._serialized_end=332
-  _globals['_DELETEVECTORRESPONSE']._serialized_start=334
-  _globals['_DELETEVECTORRESPONSE']._serialized_end=373
-  _globals['_GETSTATSREQUEST']._serialized_start=375
-  _globals['_GETSTATSREQUEST']._serialized_end=392
-  _globals['_GETSTATSRESPONSE']._serialized_start=394
-  _globals['_GETSTATSRESPONSE']._serialized_end=462
-  _globals['_DERAINESERVICE']._serialized_start=465
-  _globals['_DERAINESERVICE']._serialized_end=789
+  _globals['_SEARCHKNNREQUEST']._serialized_end=239
+  _globals['_SEARCHKNNRESPONSE']._serialized_start=241
+  _globals['_SEARCHKNNRESPONSE']._serialized_end=296
+  _globals['_MATCH']._serialized_start=298
+  _globals['_MATCH']._serialized_end=335
+  _globals['_DELETEVECTORREQUEST']._serialized_start=337
+  _globals['_DELETEVECTORREQUEST']._serialized_end=370
+  _globals['_DELETEVECTORRESPONSE']._serialized_start=372
+  _globals['_DELETEVECTORRESPONSE']._serialized_end=411
+  _globals['_GETSTATSREQUEST']._serialized_start=413
+  _globals['_GETSTATSREQUEST']._serialized_end=430
+  _globals['_GETSTATSRESPONSE']._serialized_start=432
+  _globals['_GETSTATSRESPONSE']._serialized_end=500
+  _globals['_DERAINESERVICE']._serialized_start=551
+  _globals['_DERAINESERVICE']._serialized_end=875
 # @@protoc_insertion_point(module_scope)

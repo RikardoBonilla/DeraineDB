@@ -18,7 +18,7 @@ int32_t deraine_read_vector(void* storage_ptr, uint64_t index, float* out_data, 
 
 int32_t deraine_delete_vector(void* storage_ptr, uint64_t index);
 
-int32_t deraine_search(void* storage_ptr, const float* query_ptr, uint32_t query_len, uint32_t filter_tag, uint32_t k, uint64_t* out_ids, float* out_distances);
+int32_t deraine_search(void* storage_ptr, const float* query_ptr, uint32_t query_len, uint32_t filter_tag, uint32_t k, uint64_t* out_ids, float* out_distances, int32_t mode);
 
 #ifdef __cplusplus
 }

@@ -11,6 +11,11 @@ service DeraineService {
   rpc GetStats (GetStatsRequest) returns (GetStatsResponse);
 }
 
+enum SearchMode {
+  SEARCH_FLAT = 0;
+  SEARCH_HNSW = 1;
+}
+
 message WriteVectorRequest {
   uint64 id = 1;
   uint32 tag = 2;
@@ -25,6 +30,7 @@ message SearchKNNRequest {
   repeated float query_vector = 1;
   uint32 k = 2;
   uint32 filter_tag = 3;
+  SearchMode mode = 4;
 }
 
 message SearchKNNResponse {

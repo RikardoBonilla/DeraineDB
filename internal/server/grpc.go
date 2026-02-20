@@ -32,7 +32,6 @@ func (s *DeraineServer) WriteVector(ctx context.Context, req *pb.WriteVectorRequ
 		return &pb.WriteVectorResponse{Success: false}, fmt.Errorf("vector data cannot be empty")
 	}
 
-	// Convert Go slice to C array
 	cData := make([]C.float, len(req.Data))
 	for i, v := range req.Data {
 		cData[i] = C.float(v)
@@ -65,7 +64,7 @@ func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest)
 
 	k := req.K
 	if k == 0 {
-		k = 3 // default
+		k = 3
 	}
 
 	outIds := make([]C.uint64_t, k)
@@ -79,6 +78,7 @@ func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest)
 		C.uint32_t(k),
 		&outIds[0],
 		&outDists[0],
+		C.int32_t(req.Mode),
 	)
 
 	if matches < 0 {
@@ -105,24 +105,8 @@ func (s *DeraineServer) DeleteVector(ctx context.Context, req *pb.DeleteVectorRe
 }
 
 func (s *DeraineServer) GetStats(ctx context.Context, req *pb.GetStatsRequest) (*pb.GetStatsResponse, error) {
-	// Not fully implemented in C yet, mock returning some data
 	return &pb.GetStatsResponse{
-		VectorCount:      0, // TO-DO: Implement stats via CGO if needed
+		VectorCount:      0,
 		MemoryUsageBytes: 0,
 	}, nil
-}
-
-// Ensure safe reads are tested
-func (s *DeraineServer) ReadSafe(id uint64, length uint32) ([]float32, error) {
-	outData := make([]C.float, length)
-	res := C.deraine_read_vector(s.dbHandle, C.uint64_t(id), &outData[0], C.uint32_t(length))
-	if res != 0 {
-		return nil, fmt.Errorf("Safe read failed: %d", res)
-	}
-
-	goOut := make([]float32, length)
-	for i := 0; i < int(length); i++ {
-		goOut[i] = float32(outData[i])
-	}
-	return goOut, nil
 }

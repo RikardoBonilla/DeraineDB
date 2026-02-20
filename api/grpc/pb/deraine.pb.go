@@ -21,6 +21,52 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type SearchMode int32
+
+const (
+	SearchMode_SEARCH_FLAT SearchMode = 0
+	SearchMode_SEARCH_HNSW SearchMode = 1
+)
+
+// Enum value maps for SearchMode.
+var (
+	SearchMode_name = map[int32]string{
+		0: "SEARCH_FLAT",
+		1: "SEARCH_HNSW",
+	}
+	SearchMode_value = map[string]int32{
+		"SEARCH_FLAT": 0,
+		"SEARCH_HNSW": 1,
+	}
+)
+
+func (x SearchMode) Enum() *SearchMode {
+	p := new(SearchMode)
+	*p = x
+	return p
+}
+
+func (x SearchMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SearchMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_deraine_proto_enumTypes[0].Descriptor()
+}
+
+func (SearchMode) Type() protoreflect.EnumType {
+	return &file_proto_deraine_proto_enumTypes[0]
+}
+
+func (x SearchMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SearchMode.Descriptor instead.
+func (SearchMode) EnumDescriptor() ([]byte, []int) {
+	return file_proto_deraine_proto_rawDescGZIP(), []int{0}
+}
+
 type WriteVectorRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -130,6 +176,7 @@ type SearchKNNRequest struct {
 	QueryVector   []float32              `protobuf:"fixed32,1,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
 	K             uint32                 `protobuf:"varint,2,opt,name=k,proto3" json:"k,omitempty"`
 	FilterTag     uint32                 `protobuf:"varint,3,opt,name=filter_tag,json=filterTag,proto3" json:"filter_tag,omitempty"`
+	Mode          SearchMode             `protobuf:"varint,4,opt,name=mode,proto3,enum=deraine.v1.SearchMode" json:"mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -183,6 +230,13 @@ func (x *SearchKNNRequest) GetFilterTag() uint32 {
 		return x.FilterTag
 	}
 	return 0
+}
+
+func (x *SearchKNNRequest) GetMode() SearchMode {
+	if x != nil {
+		return x.Mode
+	}
+	return SearchMode_SEARCH_FLAT
 }
 
 type SearchKNNResponse struct {
@@ -468,12 +522,13 @@ const file_proto_deraine_proto_rawDesc = "" +
 	"\x03tag\x18\x02 \x01(\rR\x03tag\x12\x12\n" +
 	"\x04data\x18\x03 \x03(\x02R\x04data\"/\n" +
 	"\x13WriteVectorResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"b\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x8e\x01\n" +
 	"\x10SearchKNNRequest\x12!\n" +
 	"\fquery_vector\x18\x01 \x03(\x02R\vqueryVector\x12\f\n" +
 	"\x01k\x18\x02 \x01(\rR\x01k\x12\x1d\n" +
 	"\n" +
-	"filter_tag\x18\x03 \x01(\rR\tfilterTag\"@\n" +
+	"filter_tag\x18\x03 \x01(\rR\tfilterTag\x12*\n" +
+	"\x04mode\x18\x04 \x01(\x0e2\x16.deraine.v1.SearchModeR\x04mode\"@\n" +
 	"\x11SearchKNNResponse\x12+\n" +
 	"\amatches\x18\x01 \x03(\v2\x11.deraine.v1.MatchR\amatches\"3\n" +
 	"\x05Match\x12\x0e\n" +
@@ -486,7 +541,11 @@ const file_proto_deraine_proto_rawDesc = "" +
 	"\x0fGetStatsRequest\"c\n" +
 	"\x10GetStatsResponse\x12!\n" +
 	"\fvector_count\x18\x01 \x01(\x04R\vvectorCount\x12,\n" +
-	"\x12memory_usage_bytes\x18\x02 \x01(\x04R\x10memoryUsageBytes2\xc4\x02\n" +
+	"\x12memory_usage_bytes\x18\x02 \x01(\x04R\x10memoryUsageBytes*.\n" +
+	"\n" +
+	"SearchMode\x12\x0f\n" +
+	"\vSEARCH_FLAT\x10\x00\x12\x0f\n" +
+	"\vSEARCH_HNSW\x10\x012\xc4\x02\n" +
 	"\x0eDeraineService\x12N\n" +
 	"\vWriteVector\x12\x1e.deraine.v1.WriteVectorRequest\x1a\x1f.deraine.v1.WriteVectorResponse\x12H\n" +
 	"\tSearchKNN\x12\x1c.deraine.v1.SearchKNNRequest\x1a\x1d.deraine.v1.SearchKNNResponse\x12Q\n" +
@@ -505,33 +564,36 @@ func file_proto_deraine_proto_rawDescGZIP() []byte {
 	return file_proto_deraine_proto_rawDescData
 }
 
+var file_proto_deraine_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_proto_deraine_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_proto_deraine_proto_goTypes = []any{
-	(*WriteVectorRequest)(nil),   // 0: deraine.v1.WriteVectorRequest
-	(*WriteVectorResponse)(nil),  // 1: deraine.v1.WriteVectorResponse
-	(*SearchKNNRequest)(nil),     // 2: deraine.v1.SearchKNNRequest
-	(*SearchKNNResponse)(nil),    // 3: deraine.v1.SearchKNNResponse
-	(*Match)(nil),                // 4: deraine.v1.Match
-	(*DeleteVectorRequest)(nil),  // 5: deraine.v1.DeleteVectorRequest
-	(*DeleteVectorResponse)(nil), // 6: deraine.v1.DeleteVectorResponse
-	(*GetStatsRequest)(nil),      // 7: deraine.v1.GetStatsRequest
-	(*GetStatsResponse)(nil),     // 8: deraine.v1.GetStatsResponse
+	(SearchMode)(0),              // 0: deraine.v1.SearchMode
+	(*WriteVectorRequest)(nil),   // 1: deraine.v1.WriteVectorRequest
+	(*WriteVectorResponse)(nil),  // 2: deraine.v1.WriteVectorResponse
+	(*SearchKNNRequest)(nil),     // 3: deraine.v1.SearchKNNRequest
+	(*SearchKNNResponse)(nil),    // 4: deraine.v1.SearchKNNResponse
+	(*Match)(nil),                // 5: deraine.v1.Match
+	(*DeleteVectorRequest)(nil),  // 6: deraine.v1.DeleteVectorRequest
+	(*DeleteVectorResponse)(nil), // 7: deraine.v1.DeleteVectorResponse
+	(*GetStatsRequest)(nil),      // 8: deraine.v1.GetStatsRequest
+	(*GetStatsResponse)(nil),     // 9: deraine.v1.GetStatsResponse
 }
 var file_proto_deraine_proto_depIdxs = []int32{
-	4, // 0: deraine.v1.SearchKNNResponse.matches:type_name -> deraine.v1.Match
-	0, // 1: deraine.v1.DeraineService.WriteVector:input_type -> deraine.v1.WriteVectorRequest
-	2, // 2: deraine.v1.DeraineService.SearchKNN:input_type -> deraine.v1.SearchKNNRequest
-	5, // 3: deraine.v1.DeraineService.DeleteVector:input_type -> deraine.v1.DeleteVectorRequest
-	7, // 4: deraine.v1.DeraineService.GetStats:input_type -> deraine.v1.GetStatsRequest
-	1, // 5: deraine.v1.DeraineService.WriteVector:output_type -> deraine.v1.WriteVectorResponse
-	3, // 6: deraine.v1.DeraineService.SearchKNN:output_type -> deraine.v1.SearchKNNResponse
-	6, // 7: deraine.v1.DeraineService.DeleteVector:output_type -> deraine.v1.DeleteVectorResponse
-	8, // 8: deraine.v1.DeraineService.GetStats:output_type -> deraine.v1.GetStatsResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: deraine.v1.SearchKNNRequest.mode:type_name -> deraine.v1.SearchMode
+	5, // 1: deraine.v1.SearchKNNResponse.matches:type_name -> deraine.v1.Match
+	1, // 2: deraine.v1.DeraineService.WriteVector:input_type -> deraine.v1.WriteVectorRequest
+	3, // 3: deraine.v1.DeraineService.SearchKNN:input_type -> deraine.v1.SearchKNNRequest
+	6, // 4: deraine.v1.DeraineService.DeleteVector:input_type -> deraine.v1.DeleteVectorRequest
+	8, // 5: deraine.v1.DeraineService.GetStats:input_type -> deraine.v1.GetStatsRequest
+	2, // 6: deraine.v1.DeraineService.WriteVector:output_type -> deraine.v1.WriteVectorResponse
+	4, // 7: deraine.v1.DeraineService.SearchKNN:output_type -> deraine.v1.SearchKNNResponse
+	7, // 8: deraine.v1.DeraineService.DeleteVector:output_type -> deraine.v1.DeleteVectorResponse
+	9, // 9: deraine.v1.DeraineService.GetStats:output_type -> deraine.v1.GetStatsResponse
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_deraine_proto_init() }
@@ -544,13 +606,14 @@ func file_proto_deraine_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_deraine_proto_rawDesc), len(file_proto_deraine_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_proto_deraine_proto_goTypes,
 		DependencyIndexes: file_proto_deraine_proto_depIdxs,
+		EnumInfos:         file_proto_deraine_proto_enumTypes,
 		MessageInfos:      file_proto_deraine_proto_msgTypes,
 	}.Build()
 	File_proto_deraine_proto = out.File
