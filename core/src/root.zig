@@ -69,6 +69,14 @@ export fn deraine_close_db(storage_ptr: *storage.Storage) void {
     allocator.destroy(storage_ptr);
 }
 
+export fn deraine_sync(storage_ptr: *storage.Storage) i32 {
+    storage_ptr.sync() catch |err| {
+        std.debug.print("Sync Error: {}\n", .{err});
+        return -1;
+    };
+    return 0;
+}
+
 export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, data_ptr: [*]const f32, len: u32) i32 {
     const data = data_ptr[0..len];
 

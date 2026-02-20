@@ -10,6 +10,8 @@ void* deraine_open_db(const char* path);
 
 void deraine_close_db(void* storage_ptr);
 
+int32_t deraine_sync(void* storage_ptr);
+
 int32_t deraine_write_vector(void* storage_ptr, uint64_t index, const float* data, uint32_t len);
 
 #endif

@@ -26,11 +26,11 @@ func main() {
 	}
 	defer C.deraine_close_db(handle)
 
-	const totalVectors = 1023
+	const totalVectors = 100000
 	data := []C.float{0.5, 1.5, 2.5, 3.5}
 	vectorLen := C.uint32_t(len(data))
 
-	fmt.Printf("🚀 Starting ingestion of %d vectors...\n", totalVectors)
+	fmt.Printf("🚀 Starting ingestion of %d vectors (Elastic Scaling Test)...\n", totalVectors)
 
 	startTime := time.Now()
 
@@ -43,12 +43,23 @@ func main() {
 		}
 	}
 
-	duration := time.Since(startTime)
+	writeDuration := time.Since(startTime)
+
+	syncStart := time.Now()
+	res := C.deraine_sync(handle)
+	if res != 0 {
+		fmt.Println("❌ Sync failed.")
+	}
+	syncDuration := time.Since(syncStart)
+
+	totalDuration := time.Since(startTime)
 
 	fmt.Println("--------------------------------------------------")
-	fmt.Printf("✅ Benchmark Complete!\n")
-	fmt.Printf("⏱️ Total Time: %v\n", duration)
-	fmt.Printf("📊 Avg Latency per Vector: %v\n", duration/totalVectors)
-	fmt.Printf("📈 Throughput: %.2f vectors/sec\n", float64(totalVectors)/duration.Seconds())
+	fmt.Printf("✅ Elastic Benchmark Complete!\n")
+	fmt.Printf("⏱️ Write Time: %v\n", writeDuration)
+	fmt.Printf("💾 Sync Time (Durability): %v\n", syncDuration)
+	fmt.Printf("🚀 Total Time: %v\n", totalDuration)
+	fmt.Printf("📊 Avg Latency per Vector: %v\n", writeDuration/totalVectors)
+	fmt.Printf("📈 Throughput: %.2f vectors/sec\n", float64(totalVectors)/writeDuration.Seconds())
 	fmt.Println("--------------------------------------------------")
 }

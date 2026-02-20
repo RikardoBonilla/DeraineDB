@@ -87,9 +87,43 @@ pub const Storage = struct {
         };
     }
 
+    const c = @cImport({
+        @cInclude("sys/mman.h");
+    });
+
     pub fn deinit(self: *Storage) void {
+        self.sync() catch {};
         std.posix.munmap(self.memory);
         self.file.close();
+    }
+
+    pub fn sync(self: *Storage) StorageError!void {
+        std.posix.msync(
+            self.memory,
+            c.MS_SYNC,
+        ) catch return StorageError.MapError;
+    }
+
+    pub fn resize(self: *Storage, new_size: usize) !void {
+        if (new_size <= self.memory.len) return;
+
+        _ = self.sync() catch {};
+
+        std.posix.munmap(self.memory);
+
+        self.file.setEndPos(new_size) catch return StorageError.TruncateError;
+
+        const new_memory = std.posix.mmap(
+            null,
+            new_size,
+            std.posix.PROT.READ | std.posix.PROT.WRITE,
+            .{ .TYPE = .SHARED },
+            self.file.handle,
+            0,
+        ) catch return StorageError.MapError;
+
+        self.memory = new_memory;
+        self.header = @as(*root.DeraineHeader, @ptrCast(self.memory.ptr));
     }
 
     pub fn writeVector(self: *Storage, index: u64, data: []const f32) !void {
@@ -98,7 +132,11 @@ pub const Storage = struct {
         const offset = header_size + (index * vector_size);
 
         if (offset + vector_size > self.memory.len) {
-            return error.MemoryBoundaryExceeded;
+            var new_capacity = self.memory.len;
+            while (offset + vector_size > new_capacity) {
+                new_capacity *= 2;
+            }
+            try self.resize(new_capacity);
         }
 
         const destination = @as([*]f32, @ptrCast(@alignCast(self.memory.ptr + offset)));
