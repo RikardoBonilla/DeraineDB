@@ -10,12 +10,14 @@ pub const StorageError = error{
     FileTooSmall,
     IndexOutOfBounds,
     VectorDeleted,
+    LockFailed,
 };
 
 pub const Storage = struct {
     file: std.fs.File,
     memory: []align(4096) u8,
     header: *root.DeraineHeader,
+    lock: std.Thread.RwLock = .{},
 
     pub fn create(path: []const u8) !Storage {
         var file = std.fs.cwd().createFile(path, .{ .read = true, .truncate = true }) catch |e| {
@@ -56,6 +58,7 @@ pub const Storage = struct {
             .file = file,
             .memory = memory,
             .header = header,
+            .lock = .{},
         };
     }
 
@@ -86,6 +89,7 @@ pub const Storage = struct {
             .file = file,
             .memory = memory,
             .header = header,
+            .lock = .{},
         };
     }
 
@@ -94,22 +98,30 @@ pub const Storage = struct {
     });
 
     pub fn deinit(self: *Storage) void {
-        self.sync() catch {};
+        self.lock.lock();
+        defer self.lock.unlock();
+        self.internal_sync() catch {};
         std.posix.munmap(self.memory);
         self.file.close();
     }
 
-    pub fn sync(self: *Storage) StorageError!void {
+    fn internal_sync(self: *Storage) StorageError!void {
         std.posix.msync(
             self.memory,
             c.MS_SYNC,
         ) catch return StorageError.MapError;
     }
 
+    pub fn sync(self: *Storage) StorageError!void {
+        self.lock.lockShared();
+        defer self.lock.unlockShared();
+        return self.internal_sync();
+    }
+
     pub fn resize(self: *Storage, new_size: usize) !void {
         if (new_size <= self.memory.len) return;
 
-        _ = self.sync() catch {};
+        _ = self.internal_sync() catch {};
 
         std.posix.munmap(self.memory);
 
@@ -129,6 +141,9 @@ pub const Storage = struct {
     }
 
     pub fn writeVector(self: *Storage, index: u64, data: []const f32) !void {
+        self.lock.lock();
+        defer self.lock.unlock();
+
         const header_size = @sizeOf(root.DeraineHeader);
         const vector_size = 64;
         const offset = header_size + (index * vector_size);
@@ -156,6 +171,9 @@ pub const Storage = struct {
     }
 
     pub fn readVector(self: *Storage, index: u64) ![]const f32 {
+        self.lock.lockShared();
+        defer self.lock.unlockShared();
+
         if (index >= self.header.vector_count) return StorageError.IndexOutOfBounds;
 
         const header_size = @sizeOf(root.DeraineHeader);
@@ -175,6 +193,9 @@ pub const Storage = struct {
     }
 
     pub fn deleteVector(self: *Storage, index: u64) !void {
+        self.lock.lock();
+        defer self.lock.unlock();
+
         if (index >= self.header.vector_count) return StorageError.IndexOutOfBounds;
 
         const header_size = @sizeOf(root.DeraineHeader);

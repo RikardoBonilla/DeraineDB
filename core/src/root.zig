@@ -82,6 +82,7 @@ export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, data_p
 
     storage_ptr.writeVector(index, data) catch |err| {
         std.debug.print("Write Error: {}\n", .{err});
+        if (err == storage.StorageError.IndexOutOfBounds) return -3;
         return -1;
     };
 
@@ -93,15 +94,21 @@ export fn deraine_read_vector(storage_ptr: *storage.Storage, index: u64, out_dat
         out_data.* = data_slice.ptr;
         return 0;
     } else |err| {
-        if (err == storage.StorageError.VectorDeleted) return -2;
-        return -1;
+        return switch (err) {
+            storage.StorageError.VectorDeleted => -2,
+            storage.StorageError.IndexOutOfBounds => -3,
+            else => -1,
+        };
     }
 }
 
 export fn deraine_delete_vector(storage_ptr: *storage.Storage, index: u64) i32 {
     storage_ptr.deleteVector(index) catch |err| {
         std.debug.print("Delete Error: {}\n", .{err});
-        return -1;
+        return switch (err) {
+            storage.StorageError.IndexOutOfBounds => -3,
+            else => -1,
+        };
     };
     return 0;
 }
