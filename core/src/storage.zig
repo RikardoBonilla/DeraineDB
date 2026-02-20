@@ -8,6 +8,8 @@ pub const StorageError = error{
     MapError,
     InvalidHeader,
     FileTooSmall,
+    IndexOutOfBounds,
+    VectorDeleted,
 };
 
 pub const Storage = struct {
@@ -139,12 +141,49 @@ pub const Storage = struct {
             try self.resize(new_capacity);
         }
 
-        const destination = @as([*]f32, @ptrCast(@alignCast(self.memory.ptr + offset)));
+        const block = self.memory[offset .. offset + vector_size];
 
-        @memcpy(destination[0..data.len], data);
+        const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
+        meta.id = index;
+        meta.status = 0x00;
+
+        const data_dest = @as([*]f32, @ptrCast(@alignCast(&meta.padding[0])));
+        @memcpy(data_dest[0..data.len], data);
 
         if (index >= self.header.vector_count) {
             self.header.vector_count = index + 1;
         }
+    }
+
+    pub fn readVector(self: *Storage, index: u64) ![]const f32 {
+        if (index >= self.header.vector_count) return StorageError.IndexOutOfBounds;
+
+        const header_size = @sizeOf(root.DeraineHeader);
+        const vector_size = 64;
+        const offset = header_size + (index * vector_size);
+
+        const block = self.memory[offset .. offset + vector_size];
+        const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
+
+        if (meta.status == 0x01) {
+            return StorageError.VectorDeleted;
+        }
+
+        const dim = 4;
+        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
+        return data_ptr[0..dim];
+    }
+
+    pub fn deleteVector(self: *Storage, index: u64) !void {
+        if (index >= self.header.vector_count) return StorageError.IndexOutOfBounds;
+
+        const header_size = @sizeOf(root.DeraineHeader);
+        const vector_size = 64;
+        const offset = header_size + (index * vector_size);
+
+        const block = self.memory[offset .. offset + vector_size];
+        const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
+
+        meta.status = 0x01;
     }
 };

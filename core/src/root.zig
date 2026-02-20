@@ -22,8 +22,8 @@ pub const DeraineVector = extern struct {
     dimensions: u32,
     reserved: u32,
     data_offset: u64,
-
-    padding: [40]u8,
+    status: u8,
+    padding: [39]u8,
 
     comptime {
         if (@sizeOf(DeraineVector) != 64) {
@@ -85,5 +85,23 @@ export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, data_p
         return -1;
     };
 
+    return 0;
+}
+
+export fn deraine_read_vector(storage_ptr: *storage.Storage, index: u64, out_data: *[*]const f32) i32 {
+    if (storage_ptr.readVector(index)) |data_slice| {
+        out_data.* = data_slice.ptr;
+        return 0;
+    } else |err| {
+        if (err == storage.StorageError.VectorDeleted) return -2;
+        return -1;
+    }
+}
+
+export fn deraine_delete_vector(storage_ptr: *storage.Storage, index: u64) i32 {
+    storage_ptr.deleteVector(index) catch |err| {
+        std.debug.print("Delete Error: {}\n", .{err});
+        return -1;
+    };
     return 0;
 }
