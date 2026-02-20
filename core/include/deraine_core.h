@@ -14,7 +14,7 @@ int32_t deraine_sync(void* storage_ptr);
 
 int32_t deraine_write_vector(void* storage_ptr, uint64_t index, uint32_t tag, const float* data, uint32_t len);
 
-int32_t deraine_read_vector(void* storage_ptr, uint64_t index, const float** out_data);
+int32_t deraine_read_vector(void* storage_ptr, uint64_t index, float* out_data, uint32_t out_len);
 
 int32_t deraine_delete_vector(void* storage_ptr, uint64_t index);
 

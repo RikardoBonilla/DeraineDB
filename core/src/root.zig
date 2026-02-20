@@ -91,9 +91,10 @@ export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, tag: u
     return 0;
 }
 
-export fn deraine_read_vector(storage_ptr: *storage.Storage, index: u64, out_data: *[*]const f32) i32 {
+export fn deraine_read_vector(storage_ptr: *storage.Storage, index: u64, out_data: [*]f32, out_len: u32) i32 {
     if (storage_ptr.readVector(index)) |data_slice| {
-        out_data.* = data_slice.ptr;
+        const copy_len = @min(out_len, @as(u32, @intCast(data_slice.len)));
+        @memcpy(out_data[0..copy_len], data_slice[0..copy_len]);
         return 0;
     } else |err| {
         return switch (err) {

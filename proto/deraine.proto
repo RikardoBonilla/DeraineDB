@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package deraine.v1;
+
+option go_package = "github.com/ricardo/deraine-db/api/grpc/pb";
+
+service DeraineService {
+  rpc WriteVector (WriteVectorRequest) returns (WriteVectorResponse);
+  rpc SearchKNN (SearchKNNRequest) returns (SearchKNNResponse);
+  rpc DeleteVector (DeleteVectorRequest) returns (DeleteVectorResponse);
+  rpc GetStats (GetStatsRequest) returns (GetStatsResponse);
+}
+
+message WriteVectorRequest {
+  uint64 id = 1;
+  uint32 tag = 2;
+  repeated float data = 3;
+}
+
+message WriteVectorResponse {
+  bool success = 1;
+}
+
+message SearchKNNRequest {
+  repeated float query_vector = 1;
+  uint32 k = 2;
+  uint32 filter_tag = 3;
+}
+
+message SearchKNNResponse {
+  repeated Match matches = 1;
+}
+
+message Match {
+  uint64 id = 1;
+  float distance = 2;
+}
+
+message DeleteVectorRequest {
+  uint64 id = 1;
+}
+
+message DeleteVectorResponse {
+   bool success = 1;
+}
+
+message GetStatsRequest {}
+
+message GetStatsResponse {
+  uint64 vector_count = 1;
+  uint64 memory_usage_bytes = 2;
+}
