@@ -53,13 +53,12 @@ pub const Storage = struct {
             .reserved = [_]u8{0} ** 32,
         };
 
-        // Create Index File (.dridx)
         var idx_path_buf: [256]u8 = undefined;
         const idx_path = try std.fmt.bufPrint(&idx_path_buf, "{s}.dridx", .{path});
         var idx_file = try std.fs.cwd().createFile(idx_path, .{ .read = true, .truncate = true });
         errdefer idx_file.close();
 
-        const idx_initial_size = 1024 * 1024; // 1MB initial for index
+        const idx_initial_size = 1024 * 1024;
         try idx_file.setEndPos(idx_initial_size);
 
         const idx_memory = std.posix.mmap(
@@ -111,7 +110,6 @@ pub const Storage = struct {
         const header = @as(*root.DeraineHeader, @ptrCast(memory.ptr));
         if (!std.mem.eql(u8, &header.magic, "DERAINE\x00")) return StorageError.InvalidHeader;
 
-        // Open Index File (.dridx)
         var idx_path_buf: [256]u8 = undefined;
         const idx_path = try std.fmt.bufPrint(&idx_path_buf, "{s}.dridx", .{path});
         const idx_file = std.fs.cwd().openFile(idx_path, .{ .mode = .read_write }) catch return StorageError.FileOpenError;
@@ -190,10 +188,7 @@ pub const Storage = struct {
         const header_size = @sizeOf(root.IndexHeader);
         const node_size = @sizeOf(root.IndexNode);
         const offset = header_size + (index * node_size);
-        // Ensure index memory is large enough
-        if (offset + node_size > self.index_memory.len) {
-            // This should be handled by the caller or a resize call
-        }
+        if (offset + node_size > self.index_memory.len) {}
         return @as(*root.IndexNode, @ptrCast(@alignCast(&self.index_memory[offset])));
     }
 
@@ -202,15 +197,14 @@ pub const Storage = struct {
         const random = prng.random();
 
         var level: i32 = 0;
-        const p: f32 = 0.5; // Probability factor for decay
+        const p: f32 = 0.5;
         while (random.float(f32) < p and level < root.HNSW_MAX_LEVEL - 1) {
             level += 1;
         }
         return level;
     }
 
-    // SIMD-Accelerated Greedy Search in a single layer
-    fn searchLayer(self: *Storage, query: []const f32, entry_id: u64, layer: i32) u64 {
+    fn searchLayer(self: *Storage, query: []const f32, entry_id: u64, layer: i32, filter_mask: u64) u64 {
         var current_id = entry_id;
         var current_dist = self.getDistance(query, current_id) catch 999999.0;
         var changed = true;
@@ -222,6 +216,12 @@ pub const Storage = struct {
 
             for (0..adj.neighbor_count) |i| {
                 const neighbor_id = adj.neighbors[i];
+
+                if (filter_mask != 0) {
+                    const m = self.getMetadataMask(neighbor_id);
+                    if ((m & filter_mask) == 0) continue;
+                }
+
                 const d = self.getDistance(query, neighbor_id) catch 999999.0;
                 if (d < current_dist) {
                     current_dist = d;
@@ -234,7 +234,6 @@ pub const Storage = struct {
     }
 
     fn getDistance(self: *Storage, query: []const f32, target_id: u64) !f32 {
-        // Safe read from mmap
         const header_size = @sizeOf(root.DeraineHeader);
         const vector_size = 64;
         const offset = header_size + (target_id * vector_size);
@@ -245,12 +244,10 @@ pub const Storage = struct {
     }
 
     pub fn insertVectorHNSW(self: *Storage, index: u64, query: []const f32) !void {
-        // 1. Determine level
         const level = getRandomLevel();
         const node = self.getIndexNode(index);
         node.max_level = level;
 
-        // Reset adjacency blocks for the new node
         for (0..root.HNSW_MAX_LEVEL) |l| {
             node.layers[l].neighbor_count = 0;
         }
@@ -264,20 +261,14 @@ pub const Storage = struct {
         var current_entry = self.index_header.entry_point_id;
         const current_max_level = self.index_header.max_level;
 
-        // 2. Search from top to new vector's level
         var l = current_max_level;
         while (l > level) : (l -= 1) {
-            current_entry = self.searchLayer(query, current_entry, l);
+            current_entry = self.searchLayer(query, current_entry, l, 0);
         }
-
-        // 3. Insert and connect at each level from min(level, current_max) down to 0
         l = @min(level, current_max_level);
         while (l >= 0) : (l -= 1) {
-            // Greedy find closest for this layer
-            current_entry = self.searchLayer(query, current_entry, l);
+            current_entry = self.searchLayer(query, current_entry, l, 0);
 
-            // Connect New -> Entry (Simplified: just connect to one for now)
-            // In a full HNSW, we maintain a list of candidates.
             const target_node = self.getIndexNode(current_entry);
             const target_adj = &target_node.layers[@as(usize, @intCast(l))];
 
@@ -299,7 +290,7 @@ pub const Storage = struct {
         }
     }
 
-    pub fn writeVector(self: *Storage, index: u64, tag: u32, data: []const f32) !void {
+    pub fn writeVector(self: *Storage, index: u64, metadata_mask: u64, data: []const f32) !void {
         self.lock.lock();
         defer self.lock.unlock();
 
@@ -315,7 +306,6 @@ pub const Storage = struct {
             try self.resize(new_capacity);
         }
 
-        // Ensure index memory is enough
         const idx_header_size = @sizeOf(root.IndexHeader);
         const idx_node_size = @sizeOf(root.IndexNode);
         const idx_offset = idx_header_size + (index * idx_node_size);
@@ -331,7 +321,7 @@ pub const Storage = struct {
 
         const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
         meta.id = index;
-        meta.tag = tag;
+        meta.metadata_mask = metadata_mask;
         meta.status = 0x00;
 
         const data_dest = @as([*]f32, @ptrCast(@alignCast(&meta.padding[0])));
@@ -341,7 +331,6 @@ pub const Storage = struct {
             self.header.vector_count = index + 1;
         }
 
-        // Trigger HNSW Insertion
         try self.insertVectorHNSW(index, data);
     }
 
@@ -386,22 +375,22 @@ pub const Storage = struct {
     pub fn search(
         self: *Storage,
         query: []const f32,
-        filter_tag: u32,
+        filter_mask: u64,
         k: u32,
         out_ids: [*]u64,
         out_distances: [*]f32,
         mode: root.SearchMode,
     ) !usize {
         if (mode == .Flat or self.index_header.max_level == -1) {
-            return self.searchFlat(query, filter_tag, k, out_ids, out_distances);
+            return self.searchFlat(query, filter_mask, k, out_ids, out_distances);
         }
-        return self.searchHNSW(query, filter_tag, k, out_ids, out_distances);
+        return self.searchHNSW(query, filter_mask, k, out_ids, out_distances);
     }
 
     fn searchHNSW(
         self: *Storage,
         query: []const f32,
-        filter_tag: u32,
+        filter_mask: u64,
         k: u32,
         out_ids: [*]u64,
         out_distances: [*]f32,
@@ -412,34 +401,45 @@ pub const Storage = struct {
         var current_entry = self.index_header.entry_point_id;
         var l = self.index_header.max_level;
         while (l > 0) : (l -= 1) {
-            current_entry = self.searchLayer(query, current_entry, l);
+            current_entry = self.searchLayer(query, current_entry, l, 0);
         }
 
-        // In layer 0, we do a greedy search or collect Top-K.
-        // For v2.0 MVP, let's keep search simple: find the closest, then collect its neighbors.
-        const final_id = self.searchLayer(query, current_entry, 0);
+        const final_id = self.searchLayer(query, current_entry, 0, filter_mask);
 
-        // Collect Top-K from neighbors of the final winner
         const node = self.getIndexNode(final_id);
         const adj = &node.layers[0];
 
         var count: usize = 0;
 
-        // Add the winner itself
-        out_ids[0] = final_id;
-        out_distances[0] = try self.getDistance(query, final_id);
-        count = 1;
+        const winner_mask = self.getMetadataMask(final_id);
+        if (filter_mask == 0 or (winner_mask & filter_mask) != 0) {
+            out_ids[0] = final_id;
+            out_distances[0] = try self.getDistance(query, final_id);
+            count = 1;
+        }
 
         for (0..adj.neighbor_count) |i| {
             if (count >= k) break;
             const nid = adj.neighbors[i];
+
+            const m = self.getMetadataMask(nid);
+            if (filter_mask != 0 and (m & filter_mask) == 0) continue;
+
             out_ids[count] = nid;
             out_distances[count] = try self.getDistance(query, nid);
             count += 1;
         }
 
-        _ = filter_tag; // TO-DO: Implement HNSW filtering
         return count;
+    }
+
+    fn getMetadataMask(self: *Storage, target_id: u64) u64 {
+        const header_size = @sizeOf(root.DeraineHeader);
+        const vector_size = 64;
+        const offset = header_size + (target_id * vector_size);
+        const block = self.memory[offset .. offset + vector_size];
+        const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
+        return meta.metadata_mask;
     }
 
     inline fn euclideanDistanceSIMD(a: []const f32, b: []const f32) f32 {
@@ -466,7 +466,7 @@ pub const Storage = struct {
     fn searchFlat(
         self: *Storage,
         query: []const f32,
-        filter_tag: u32,
+        filter_mask: u64,
         k: u32,
         out_ids: [*]u64,
         out_distances: [*]f32,
@@ -486,7 +486,8 @@ pub const Storage = struct {
             const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
 
             if (meta.status == 0x01) continue;
-            if (filter_tag != 0 and meta.tag != filter_tag) continue;
+
+            if (filter_mask != 0 and (meta.metadata_mask & filter_mask) == 0) continue;
 
             const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
             const dist = euclideanDistanceSIMD(query, data_ptr[0..dim]);

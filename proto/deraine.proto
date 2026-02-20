@@ -18,7 +18,7 @@ enum SearchMode {
 
 message WriteVectorRequest {
   uint64 id = 1;
-  uint32 tag = 2;
+  uint64 metadata_mask = 2;
   repeated float data = 3;
 }
 
@@ -29,7 +29,7 @@ message WriteVectorResponse {
 message SearchKNNRequest {
   repeated float query_vector = 1;
   uint32 k = 2;
-  uint32 filter_tag = 3;
+  uint64 filter_mask = 3;
   SearchMode mode = 4;
 }
 

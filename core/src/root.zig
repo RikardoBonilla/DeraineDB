@@ -20,11 +20,10 @@ pub const DeraineHeader = extern struct {
 pub const DeraineVector = extern struct {
     id: u64,
     dimensions: u32,
-    reserved: u32,
-    data_offset: u64,
     status: u8,
     align_pad: [3]u8,
-    tag: u32,
+    data_offset: u64,
+    metadata_mask: u64,
     padding: [32]u8,
 
     comptime {
@@ -34,7 +33,7 @@ pub const DeraineVector = extern struct {
     }
 };
 
-pub const HNSW_M = 16; // Max connections per layer
+pub const HNSW_M = 16;
 pub const HNSW_EF_CONSTRUCTION = 128;
 pub const HNSW_MAX_LEVEL = 16;
 
@@ -53,16 +52,14 @@ pub const IndexHeader = extern struct {
     }
 };
 
-// Adjacency block for a single vector at a single level
 pub const AdjacencyBlock = extern struct {
     neighbor_count: u32,
     neighbors: [HNSW_M]u64,
-    padding: [60]u8, // Total 4 + 128 + 60 = 192 bytes. Aligned to 64.
+    padding: [60]u8,
 };
 
 pub const IndexNode = extern struct {
     max_level: i32,
-    // Each node can have up to HNSW_MAX_LEVEL levels.
     layers: [HNSW_MAX_LEVEL]AdjacencyBlock,
 
     comptime {
@@ -121,10 +118,10 @@ export fn deraine_sync(storage_ptr: *storage.Storage) i32 {
     return 0;
 }
 
-export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, tag: u32, data_ptr: [*]const f32, len: u32) i32 {
+export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, metadata_mask: u64, data_ptr: [*]const f32, len: u32) i32 {
     const data = data_ptr[0..len];
 
-    storage_ptr.writeVector(index, tag, data) catch |err| {
+    storage_ptr.writeVector(index, metadata_mask, data) catch |err| {
         std.debug.print("Write Error: {}\n", .{err});
         if (err == storage.StorageError.IndexOutOfBounds) return -3;
         return -1;
@@ -162,7 +159,7 @@ export fn deraine_search(
     storage_ptr: *storage.Storage,
     query_ptr: [*]const f32,
     query_len: u32,
-    filter_tag: u32,
+    filter_mask: u64,
     k: u32,
     out_ids: [*]u64,
     out_distances: [*]f32,
@@ -171,7 +168,7 @@ export fn deraine_search(
     const query = query_ptr[0..query_len];
     const search_mode: SearchMode = @enumFromInt(mode);
 
-    const matches = storage_ptr.search(query, filter_tag, k, out_ids, out_distances, search_mode) catch |err| {
+    const matches = storage_ptr.search(query, filter_mask, k, out_ids, out_distances, search_mode) catch |err| {
         std.debug.print("Search Error: {}\n", .{err});
         return -1;
     };

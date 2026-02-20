@@ -40,7 +40,7 @@ func (s *DeraineServer) WriteVector(ctx context.Context, req *pb.WriteVectorRequ
 	res := C.deraine_write_vector(
 		s.dbHandle,
 		C.uint64_t(req.Id),
-		C.uint32_t(req.Tag),
+		C.uint64_t(req.MetadataMask),
 		&cData[0],
 		C.uint32_t(len(req.Data)),
 	)
@@ -74,7 +74,7 @@ func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest)
 		s.dbHandle,
 		&cQuery[0],
 		C.uint32_t(len(req.QueryVector)),
-		C.uint32_t(req.FilterTag),
+		C.uint64_t(req.FilterMask),
 		C.uint32_t(k),
 		&outIds[0],
 		&outDists[0],

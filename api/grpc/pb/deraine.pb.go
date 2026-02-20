@@ -70,7 +70,7 @@ func (SearchMode) EnumDescriptor() ([]byte, []int) {
 type WriteVectorRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Tag           uint32                 `protobuf:"varint,2,opt,name=tag,proto3" json:"tag,omitempty"`
+	MetadataMask  uint64                 `protobuf:"varint,2,opt,name=metadata_mask,json=metadataMask,proto3" json:"metadata_mask,omitempty"`
 	Data          []float32              `protobuf:"fixed32,3,rep,packed,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -113,9 +113,9 @@ func (x *WriteVectorRequest) GetId() uint64 {
 	return 0
 }
 
-func (x *WriteVectorRequest) GetTag() uint32 {
+func (x *WriteVectorRequest) GetMetadataMask() uint64 {
 	if x != nil {
-		return x.Tag
+		return x.MetadataMask
 	}
 	return 0
 }
@@ -175,7 +175,7 @@ type SearchKNNRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	QueryVector   []float32              `protobuf:"fixed32,1,rep,packed,name=query_vector,json=queryVector,proto3" json:"query_vector,omitempty"`
 	K             uint32                 `protobuf:"varint,2,opt,name=k,proto3" json:"k,omitempty"`
-	FilterTag     uint32                 `protobuf:"varint,3,opt,name=filter_tag,json=filterTag,proto3" json:"filter_tag,omitempty"`
+	FilterMask    uint64                 `protobuf:"varint,3,opt,name=filter_mask,json=filterMask,proto3" json:"filter_mask,omitempty"`
 	Mode          SearchMode             `protobuf:"varint,4,opt,name=mode,proto3,enum=deraine.v1.SearchMode" json:"mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -225,9 +225,9 @@ func (x *SearchKNNRequest) GetK() uint32 {
 	return 0
 }
 
-func (x *SearchKNNRequest) GetFilterTag() uint32 {
+func (x *SearchKNNRequest) GetFilterMask() uint64 {
 	if x != nil {
-		return x.FilterTag
+		return x.FilterMask
 	}
 	return 0
 }
@@ -516,18 +516,18 @@ var File_proto_deraine_proto protoreflect.FileDescriptor
 const file_proto_deraine_proto_rawDesc = "" +
 	"\n" +
 	"\x13proto/deraine.proto\x12\n" +
-	"deraine.v1\"J\n" +
+	"deraine.v1\"]\n" +
 	"\x12WriteVectorRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x10\n" +
-	"\x03tag\x18\x02 \x01(\rR\x03tag\x12\x12\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12#\n" +
+	"\rmetadata_mask\x18\x02 \x01(\x04R\fmetadataMask\x12\x12\n" +
 	"\x04data\x18\x03 \x03(\x02R\x04data\"/\n" +
 	"\x13WriteVectorResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x8e\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x90\x01\n" +
 	"\x10SearchKNNRequest\x12!\n" +
 	"\fquery_vector\x18\x01 \x03(\x02R\vqueryVector\x12\f\n" +
-	"\x01k\x18\x02 \x01(\rR\x01k\x12\x1d\n" +
-	"\n" +
-	"filter_tag\x18\x03 \x01(\rR\tfilterTag\x12*\n" +
+	"\x01k\x18\x02 \x01(\rR\x01k\x12\x1f\n" +
+	"\vfilter_mask\x18\x03 \x01(\x04R\n" +
+	"filterMask\x12*\n" +
 	"\x04mode\x18\x04 \x01(\x0e2\x16.deraine.v1.SearchModeR\x04mode\"@\n" +
 	"\x11SearchKNNResponse\x12+\n" +
 	"\amatches\x18\x01 \x03(\v2\x11.deraine.v1.MatchR\amatches\"3\n" +
