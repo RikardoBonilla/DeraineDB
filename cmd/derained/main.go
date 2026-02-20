@@ -9,8 +9,6 @@ package main
 import "C"
 import (
 	"fmt"
-	"math/rand"
-	"sync"
 	"time"
 	"unsafe"
 )
@@ -28,47 +26,55 @@ func main() {
 	}
 	defer C.deraine_close_db(handle)
 
-	fmt.Printf("🚀 Starting Sprint 5: Concurrency Stress Test (100 Goroutines)...\n")
+	fmt.Printf("🚀 Starting Sprint 6: Mathematics & Vector Search...\n")
 
-	var wg sync.WaitGroup
-	const numRoutines = 100
-	const opsPerRoutine = 500
-
-	data := []C.float{0.5, 1.5, 2.5, 3.5}
-	vectorLen := C.uint32_t(len(data))
+	const totalVectors = 5000
+	const vectorLen uint32 = 4
 
 	startTime := time.Now()
+	for i := 0; i < totalVectors; i++ {
+		index := C.uint64_t(i)
+		tag := C.uint32_t(1)
 
-	for i := 0; i < numRoutines; i++ {
-		wg.Add(1)
-		go func(routineID int) {
-			defer wg.Done()
+		data := []C.float{C.float(i), C.float(i) + 1.0, C.float(i) + 2.0, C.float(i) + 3.0}
 
-			r := rand.New(rand.NewSource(time.Now().UnixNano() + int64(routineID)))
-
-			for j := 0; j < opsPerRoutine; j++ {
-				opType := r.Float32()
-				index := C.uint64_t(r.Intn(100000))
-
-				if opType < 0.4 {
-					C.deraine_write_vector(handle, index, &data[0], vectorLen)
-				} else if opType < 0.8 {
-					var outData *C.float
-					res := C.deraine_read_vector(handle, index, &outData)
-					if res == 0 {
-						_ = unsafe.Slice((*float32)(unsafe.Pointer(outData)), 4)
-					}
-				} else {
-					C.deraine_delete_vector(handle, index)
-				}
-			}
-		}(i)
+		res := C.deraine_write_vector(handle, index, tag, &data[0], C.uint32_t(vectorLen))
+		if res != 0 {
+			fmt.Printf("❌ Write failed at index %d\n", i)
+			return
+		}
 	}
+	ingestionDuration := time.Since(startTime)
+	fmt.Printf("✅ %d mathematical embeddings inserted in %v.\n", totalVectors, ingestionDuration)
 
-	wg.Wait()
+	query := []C.float{500.0, 501.0, 502.0, 503.0}
+	fmt.Printf("\n🔍 Querying Vector: %v\n", query)
 
-	testDuration := time.Since(startTime)
-	totalOps := numRoutines * opsPerRoutine
+	const K = 3
+	outIds := make([]C.uint64_t, K)
+	outDists := make([]C.float, K)
+
+	searchStart := time.Now()
+	matches := C.deraine_search(
+		handle,
+		&query[0],
+		C.uint32_t(vectorLen),
+		0,
+		K,
+		&outIds[0],
+		&outDists[0],
+	)
+	searchDuration := time.Since(searchStart)
+
+	if matches >= 0 {
+		fmt.Printf("✅ Search completed in %v. Found %d matches.\n", searchDuration, matches)
+		fmt.Println("\n🏆 Top Results:")
+		for i := 0; i < int(matches); i++ {
+			fmt.Printf("   #%d -> Vector ID: %d | Euclidean Distance: %f\n", i+1, uint64(outIds[i]), float32(outDists[i]))
+		}
+	} else {
+		fmt.Printf("❌ Search failed with code: %d\n", matches)
+	}
 
 	resSync := C.deraine_sync(handle)
 	if resSync != 0 {
@@ -76,8 +82,6 @@ func main() {
 	}
 
 	fmt.Println("\n--------------------------------------------------")
-	fmt.Printf("✅ Sprint 5 Concurrency Test Complete! (Zero Segfaults)\n")
-	fmt.Printf("⚡ Processed %d concurrent operations in %v\n", totalOps, testDuration)
-	fmt.Printf("📈 Concurrent Throughput: %.2f ops/sec\n", float64(totalOps)/testDuration.Seconds())
+	fmt.Printf("✅ Sprint 6 AI Vector Search Test Complete!\n")
 	fmt.Println("--------------------------------------------------")
 }

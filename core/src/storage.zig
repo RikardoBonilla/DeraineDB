@@ -140,7 +140,7 @@ pub const Storage = struct {
         self.header = @as(*root.DeraineHeader, @ptrCast(self.memory.ptr));
     }
 
-    pub fn writeVector(self: *Storage, index: u64, data: []const f32) !void {
+    pub fn writeVector(self: *Storage, index: u64, tag: u32, data: []const f32) !void {
         self.lock.lock();
         defer self.lock.unlock();
 
@@ -160,6 +160,7 @@ pub const Storage = struct {
 
         const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
         meta.id = index;
+        meta.tag = tag;
         meta.status = 0x00;
 
         const data_dest = @as([*]f32, @ptrCast(@alignCast(&meta.padding[0])));
@@ -206,5 +207,79 @@ pub const Storage = struct {
         const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
 
         meta.status = 0x01;
+    }
+
+    inline fn euclideanDistanceSIMD(a: []const f32, b: []const f32) f32 {
+        var sum: f32 = 0;
+        var i: usize = 0;
+        const vec_len = 4;
+
+        while (i + vec_len <= a.len) : (i += vec_len) {
+            const va: @Vector(vec_len, f32) = a[i .. i + vec_len][0..vec_len].*;
+            const vb: @Vector(vec_len, f32) = b[i .. i + vec_len][0..vec_len].*;
+            const diff = va - vb;
+            const squared = diff * diff;
+            sum += @reduce(.Add, squared);
+        }
+
+        while (i < a.len) : (i += 1) {
+            const diff = a[i] - b[i];
+            sum += diff * diff;
+        }
+
+        return std.math.sqrt(sum);
+    }
+
+    pub fn search(
+        self: *Storage,
+        query: []const f32,
+        filter_tag: u32,
+        k: u32,
+        out_ids: [*]u64,
+        out_distances: [*]f32,
+    ) !usize {
+        self.lock.lockShared();
+        defer self.lock.unlockShared();
+
+        const header_size = @sizeOf(root.DeraineHeader);
+        const vector_size = 64;
+        const dim: usize = 4;
+
+        var count: usize = 0;
+
+        for (0..self.header.vector_count) |i| {
+            const offset = header_size + (i * vector_size);
+            const block = self.memory[offset .. offset + vector_size];
+            const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
+
+            if (meta.status == 0x01) continue;
+            if (filter_tag != 0 and meta.tag != filter_tag) continue;
+
+            const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
+            const dist = euclideanDistanceSIMD(query, data_ptr[0..dim]);
+
+            if (count < k) {
+                out_ids[count] = meta.id;
+                out_distances[count] = dist;
+                count += 1;
+
+                var j = count - 1;
+                while (j > 0 and out_distances[j - 1] > out_distances[j]) : (j -= 1) {
+                    std.mem.swap(f32, &out_distances[j - 1], &out_distances[j]);
+                    std.mem.swap(u64, &out_ids[j - 1], &out_ids[j]);
+                }
+            } else if (dist < out_distances[k - 1]) {
+                out_ids[k - 1] = meta.id;
+                out_distances[k - 1] = dist;
+
+                var j = k - 1;
+                while (j > 0 and out_distances[j - 1] > out_distances[j]) : (j -= 1) {
+                    std.mem.swap(f32, &out_distances[j - 1], &out_distances[j]);
+                    std.mem.swap(u64, &out_ids[j - 1], &out_ids[j]);
+                }
+            }
+        }
+
+        return count;
     }
 };

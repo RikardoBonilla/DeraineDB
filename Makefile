@@ -1,29 +1,23 @@
-# Variables de configuración
-ZIG_LIB_DIR = core/zig-out/lib
-INCLUDE_DIR = include
-BINARY_NAME = bin/derained
+.PHONY: all build-core build-go clean run
 
-# Flags para que Go encuentre a Zig
-export CGO_CFLAGS = -I$(shell pwd)/$(INCLUDE_DIR)
-export CGO_LDFLAGS = -L$(shell pwd)/$(ZIG_LIB_DIR) -lcore
+all: clean build-core build-go
 
-.PHONY: all core build clean
-
-all: core build
-
-# 1. Compilar Zig como librería estática (.a)
-core:
-	@echo "[METAL] Compilando Core en Zig..."
+build-core:
+	@echo "=> Compiling Zig Engine (ReleaseFast)..."
 	cd core && zig build -Doptimize=ReleaseFast
-	@echo "[METAL] Copiando headers..."
-	cp core/zig-out/include/deraine_core.h include/
 
-# 2. Compilar Go vinculando la librería de Zig
-build:
-	@echo "[LOGIC] Compilando Orquestador en Go..."
+build-go:
+	@echo "=> Compiling Go Orchestrator (Stripping debug symbols)..."
 	mkdir -p bin
-	go build -o $(BINARY_NAME) ./cmd/derained
+	go build -a -ldflags="-s -w" -o bin/deraine-db ./cmd/derained
 
 clean:
+	@echo "=> Cleaning workspace..."
 	rm -rf bin/
-	cd core && rm -rf zig-out/ zig-cache/
+	rm -rf core/zig-cache/
+	rm -rf core/zig-out/
+	rm -f test_bridge.drb
+
+run: all
+	@echo "=> Executing DeraineDB..."
+	./bin/deraine-db

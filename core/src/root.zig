@@ -23,7 +23,9 @@ pub const DeraineVector = extern struct {
     reserved: u32,
     data_offset: u64,
     status: u8,
-    padding: [39]u8,
+    align_pad: [3]u8,
+    tag: u32,
+    padding: [32]u8,
 
     comptime {
         if (@sizeOf(DeraineVector) != 64) {
@@ -77,10 +79,10 @@ export fn deraine_sync(storage_ptr: *storage.Storage) i32 {
     return 0;
 }
 
-export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, data_ptr: [*]const f32, len: u32) i32 {
+export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, tag: u32, data_ptr: [*]const f32, len: u32) i32 {
     const data = data_ptr[0..len];
 
-    storage_ptr.writeVector(index, data) catch |err| {
+    storage_ptr.writeVector(index, tag, data) catch |err| {
         std.debug.print("Write Error: {}\n", .{err});
         if (err == storage.StorageError.IndexOutOfBounds) return -3;
         return -1;
@@ -111,4 +113,23 @@ export fn deraine_delete_vector(storage_ptr: *storage.Storage, index: u64) i32 {
         };
     };
     return 0;
+}
+
+export fn deraine_search(
+    storage_ptr: *storage.Storage,
+    query_ptr: [*]const f32,
+    query_len: u32,
+    filter_tag: u32,
+    k: u32,
+    out_ids: [*]u64,
+    out_distances: [*]f32,
+) i32 {
+    const query = query_ptr[0..query_len];
+
+    const matches = storage_ptr.search(query, filter_tag, k, out_ids, out_distances) catch |err| {
+        std.debug.print("Search Error: {}\n", .{err});
+        return -1;
+    };
+
+    return @intCast(matches);
 }
