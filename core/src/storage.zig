@@ -15,14 +15,18 @@ pub const Storage = struct {
     memory: []align(4096) u8,
     header: *root.DeraineHeader,
 
-    /// Creates a new database file and initializes the header.
     pub fn create(path: []const u8) !Storage {
-        // Create with .read=true to allow mmap PROT.READ
-        const file = std.fs.cwd().createFile(path, .{ .read = true, .exclusive = true }) catch return StorageError.FileCreateError;
+        var file = std.fs.cwd().createFile(path, .{ .read = true, .truncate = true }) catch |e| {
+            std.debug.print("createFile error: {}\n", .{e});
+            return StorageError.FileCreateError;
+        };
         errdefer file.close();
 
         const initial_size = 64 * 1024;
-        try file.setEndPos(initial_size);
+        file.setEndPos(initial_size) catch |e| {
+            std.debug.print("setEndPos error: {}\n", .{e});
+            return StorageError.TruncateError;
+        };
 
         const memory = std.posix.mmap(
             null,
@@ -31,7 +35,10 @@ pub const Storage = struct {
             .{ .TYPE = .SHARED },
             file.handle,
             0,
-        ) catch return StorageError.MapError;
+        ) catch |e| {
+            std.debug.print("mmap error: {}\n", .{e});
+            return StorageError.MapError;
+        };
 
         const header = @as(*root.DeraineHeader, @ptrCast(memory.ptr));
         header.* = .{
@@ -50,7 +57,6 @@ pub const Storage = struct {
         };
     }
 
-    /// Opens an existing database file and validates the header.
     pub fn open(path: []const u8) !Storage {
         const file = std.fs.cwd().openFile(path, .{ .mode = .read_write }) catch return StorageError.FileOpenError;
         const stat = try file.stat();
@@ -84,5 +90,23 @@ pub const Storage = struct {
     pub fn deinit(self: *Storage) void {
         std.posix.munmap(self.memory);
         self.file.close();
+    }
+
+    pub fn writeVector(self: *Storage, index: u64, data: []const f32) !void {
+        const header_size = @sizeOf(root.DeraineHeader);
+        const vector_size = 64;
+        const offset = header_size + (index * vector_size);
+
+        if (offset + vector_size > self.memory.len) {
+            return error.MemoryBoundaryExceeded;
+        }
+
+        const destination = @as([*]f32, @ptrCast(@alignCast(self.memory.ptr + offset)));
+
+        @memcpy(destination[0..data.len], data);
+
+        if (index >= self.header.vector_count) {
+            self.header.vector_count = index + 1;
+        }
     }
 };

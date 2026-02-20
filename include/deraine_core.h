@@ -3,24 +3,18 @@
 
 #include <stdint.h>
 
-#if defined(__cplusplus)
-extern "C" {
+// Base engine functions
+int32_t deraine_init();
+int32_t deraine_version();
+
+// New Pointer-based Lifecycle
+// Returns a pointer to the storage instance or NULL on failure
+void* deraine_open_db(const char* path);
+
+// Closes the database and releases all associated resources
+void deraine_close_db(void* storage_ptr);
+
+// Data operations using the storage handle
+int32_t deraine_write_vector(void* storage_ptr, uint64_t index, const float* data, uint32_t len);
+
 #endif
-
-// Initializes the core system. Returns 0 on success.
-int32_t deraine_init(void);
-
-// Returns the core version.
-int32_t deraine_version(void);
-
-// Creates a new database. Returns 0 on success, -1 on error.
-int32_t deraine_create_db(const char* path);
-
-// Opens an existing database. Returns 0 on success, -1 on error.
-int32_t deraine_open_db(const char* path);
-
-#if defined(__cplusplus)
-}
-#endif
-
-#endif // DERAINE_CORE_H
