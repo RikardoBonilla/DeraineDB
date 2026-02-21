@@ -12,6 +12,19 @@ void deraine_close_db(void* storage_ptr);
 
 int32_t deraine_sync(void* storage_ptr);
 
+int32_t deraine_create_snapshot(void* storage_ptr, const char* target_path);
+
+int32_t deraine_rebuild_index(void* storage_ptr);
+
+typedef struct {
+    uint8_t healthy;
+    uint32_t version;
+    uint64_t vector_count;
+    int32_t max_level;
+} deraine_status_t;
+
+int32_t deraine_get_status(void* storage_ptr, deraine_status_t* out_status);
+
 int32_t deraine_write_vector(void* storage_ptr, uint64_t index, uint64_t metadata_mask, const float* data, uint32_t len);
 
 int32_t deraine_read_vector(void* storage_ptr, uint64_t index, float* out_data, uint32_t out_len);

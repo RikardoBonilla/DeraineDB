@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DeraineService_WriteVector_FullMethodName  = "/deraine.v1.DeraineService/WriteVector"
-	DeraineService_SearchKNN_FullMethodName    = "/deraine.v1.DeraineService/SearchKNN"
-	DeraineService_DeleteVector_FullMethodName = "/deraine.v1.DeraineService/DeleteVector"
-	DeraineService_GetStats_FullMethodName     = "/deraine.v1.DeraineService/GetStats"
+	DeraineService_WriteVector_FullMethodName     = "/deraine.v1.DeraineService/WriteVector"
+	DeraineService_SearchKNN_FullMethodName       = "/deraine.v1.DeraineService/SearchKNN"
+	DeraineService_DeleteVector_FullMethodName    = "/deraine.v1.DeraineService/DeleteVector"
+	DeraineService_CreateSnapshot_FullMethodName  = "/deraine.v1.DeraineService/CreateSnapshot"
+	DeraineService_GetEngineStatus_FullMethodName = "/deraine.v1.DeraineService/GetEngineStatus"
+	DeraineService_GetStats_FullMethodName        = "/deraine.v1.DeraineService/GetStats"
 )
 
 // DeraineServiceClient is the client API for DeraineService service.
@@ -32,6 +34,8 @@ type DeraineServiceClient interface {
 	WriteVector(ctx context.Context, in *WriteVectorRequest, opts ...grpc.CallOption) (*WriteVectorResponse, error)
 	SearchKNN(ctx context.Context, in *SearchKNNRequest, opts ...grpc.CallOption) (*SearchKNNResponse, error)
 	DeleteVector(ctx context.Context, in *DeleteVectorRequest, opts ...grpc.CallOption) (*DeleteVectorResponse, error)
+	CreateSnapshot(ctx context.Context, in *CreateSnapshotRequest, opts ...grpc.CallOption) (*CreateSnapshotResponse, error)
+	GetEngineStatus(ctx context.Context, in *GetEngineStatusRequest, opts ...grpc.CallOption) (*GetEngineStatusResponse, error)
 	GetStats(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (*GetStatsResponse, error)
 }
 
@@ -73,6 +77,26 @@ func (c *deraineServiceClient) DeleteVector(ctx context.Context, in *DeleteVecto
 	return out, nil
 }
 
+func (c *deraineServiceClient) CreateSnapshot(ctx context.Context, in *CreateSnapshotRequest, opts ...grpc.CallOption) (*CreateSnapshotResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateSnapshotResponse)
+	err := c.cc.Invoke(ctx, DeraineService_CreateSnapshot_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deraineServiceClient) GetEngineStatus(ctx context.Context, in *GetEngineStatusRequest, opts ...grpc.CallOption) (*GetEngineStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetEngineStatusResponse)
+	err := c.cc.Invoke(ctx, DeraineService_GetEngineStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *deraineServiceClient) GetStats(ctx context.Context, in *GetStatsRequest, opts ...grpc.CallOption) (*GetStatsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetStatsResponse)
@@ -90,6 +114,8 @@ type DeraineServiceServer interface {
 	WriteVector(context.Context, *WriteVectorRequest) (*WriteVectorResponse, error)
 	SearchKNN(context.Context, *SearchKNNRequest) (*SearchKNNResponse, error)
 	DeleteVector(context.Context, *DeleteVectorRequest) (*DeleteVectorResponse, error)
+	CreateSnapshot(context.Context, *CreateSnapshotRequest) (*CreateSnapshotResponse, error)
+	GetEngineStatus(context.Context, *GetEngineStatusRequest) (*GetEngineStatusResponse, error)
 	GetStats(context.Context, *GetStatsRequest) (*GetStatsResponse, error)
 	mustEmbedUnimplementedDeraineServiceServer()
 }
@@ -109,6 +135,12 @@ func (UnimplementedDeraineServiceServer) SearchKNN(context.Context, *SearchKNNRe
 }
 func (UnimplementedDeraineServiceServer) DeleteVector(context.Context, *DeleteVectorRequest) (*DeleteVectorResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteVector not implemented")
+}
+func (UnimplementedDeraineServiceServer) CreateSnapshot(context.Context, *CreateSnapshotRequest) (*CreateSnapshotResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateSnapshot not implemented")
+}
+func (UnimplementedDeraineServiceServer) GetEngineStatus(context.Context, *GetEngineStatusRequest) (*GetEngineStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetEngineStatus not implemented")
 }
 func (UnimplementedDeraineServiceServer) GetStats(context.Context, *GetStatsRequest) (*GetStatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetStats not implemented")
@@ -188,6 +220,42 @@ func _DeraineService_DeleteVector_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeraineService_CreateSnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSnapshotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeraineServiceServer).CreateSnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeraineService_CreateSnapshot_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeraineServiceServer).CreateSnapshot(ctx, req.(*CreateSnapshotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeraineService_GetEngineStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetEngineStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeraineServiceServer).GetEngineStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeraineService_GetEngineStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeraineServiceServer).GetEngineStatus(ctx, req.(*GetEngineStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DeraineService_GetStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetStatsRequest)
 	if err := dec(in); err != nil {
@@ -224,6 +292,14 @@ var DeraineService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteVector",
 			Handler:    _DeraineService_DeleteVector_Handler,
+		},
+		{
+			MethodName: "CreateSnapshot",
+			Handler:    _DeraineService_CreateSnapshot_Handler,
+		},
+		{
+			MethodName: "GetEngineStatus",
+			Handler:    _DeraineService_GetEngineStatus_Handler,
 		},
 		{
 			MethodName: "GetStats",

@@ -49,6 +49,16 @@ class DeraineServiceStub(object):
                 request_serializer=deraine__pb2.DeleteVectorRequest.SerializeToString,
                 response_deserializer=deraine__pb2.DeleteVectorResponse.FromString,
                 _registered_method=True)
+        self.CreateSnapshot = channel.unary_unary(
+                '/deraine.v1.DeraineService/CreateSnapshot',
+                request_serializer=deraine__pb2.CreateSnapshotRequest.SerializeToString,
+                response_deserializer=deraine__pb2.CreateSnapshotResponse.FromString,
+                _registered_method=True)
+        self.GetEngineStatus = channel.unary_unary(
+                '/deraine.v1.DeraineService/GetEngineStatus',
+                request_serializer=deraine__pb2.GetEngineStatusRequest.SerializeToString,
+                response_deserializer=deraine__pb2.GetEngineStatusResponse.FromString,
+                _registered_method=True)
         self.GetStats = channel.unary_unary(
                 '/deraine.v1.DeraineService/GetStats',
                 request_serializer=deraine__pb2.GetStatsRequest.SerializeToString,
@@ -77,6 +87,18 @@ class DeraineServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateSnapshot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetEngineStatus(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def GetStats(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -100,6 +122,16 @@ def add_DeraineServiceServicer_to_server(servicer, server):
                     servicer.DeleteVector,
                     request_deserializer=deraine__pb2.DeleteVectorRequest.FromString,
                     response_serializer=deraine__pb2.DeleteVectorResponse.SerializeToString,
+            ),
+            'CreateSnapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateSnapshot,
+                    request_deserializer=deraine__pb2.CreateSnapshotRequest.FromString,
+                    response_serializer=deraine__pb2.CreateSnapshotResponse.SerializeToString,
+            ),
+            'GetEngineStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetEngineStatus,
+                    request_deserializer=deraine__pb2.GetEngineStatusRequest.FromString,
+                    response_serializer=deraine__pb2.GetEngineStatusResponse.SerializeToString,
             ),
             'GetStats': grpc.unary_unary_rpc_method_handler(
                     servicer.GetStats,
@@ -188,6 +220,60 @@ class DeraineService(object):
             '/deraine.v1.DeraineService/DeleteVector',
             deraine__pb2.DeleteVectorRequest.SerializeToString,
             deraine__pb2.DeleteVectorResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateSnapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/deraine.v1.DeraineService/CreateSnapshot',
+            deraine__pb2.CreateSnapshotRequest.SerializeToString,
+            deraine__pb2.CreateSnapshotResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetEngineStatus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/deraine.v1.DeraineService/GetEngineStatus',
+            deraine__pb2.GetEngineStatusRequest.SerializeToString,
+            deraine__pb2.GetEngineStatusResponse.FromString,
             options,
             channel_credentials,
             insecure,

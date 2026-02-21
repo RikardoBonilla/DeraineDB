@@ -423,6 +423,206 @@ func (x *DeleteVectorResponse) GetSuccess() bool {
 	return false
 }
 
+type GetEngineStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEngineStatusRequest) Reset() {
+	*x = GetEngineStatusRequest{}
+	mi := &file_proto_deraine_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEngineStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEngineStatusRequest) ProtoMessage() {}
+
+func (x *GetEngineStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_deraine_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEngineStatusRequest.ProtoReflect.Descriptor instead.
+func (*GetEngineStatusRequest) Descriptor() ([]byte, []int) {
+	return file_proto_deraine_proto_rawDescGZIP(), []int{7}
+}
+
+type GetEngineStatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Healthy       bool                   `protobuf:"varint,1,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	Version       string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	VectorCount   uint64                 `protobuf:"varint,3,opt,name=vector_count,json=vectorCount,proto3" json:"vector_count,omitempty"`
+	IndexLevel    int32                  `protobuf:"varint,4,opt,name=index_level,json=indexLevel,proto3" json:"index_level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEngineStatusResponse) Reset() {
+	*x = GetEngineStatusResponse{}
+	mi := &file_proto_deraine_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEngineStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEngineStatusResponse) ProtoMessage() {}
+
+func (x *GetEngineStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_deraine_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEngineStatusResponse.ProtoReflect.Descriptor instead.
+func (*GetEngineStatusResponse) Descriptor() ([]byte, []int) {
+	return file_proto_deraine_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetEngineStatusResponse) GetHealthy() bool {
+	if x != nil {
+		return x.Healthy
+	}
+	return false
+}
+
+func (x *GetEngineStatusResponse) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *GetEngineStatusResponse) GetVectorCount() uint64 {
+	if x != nil {
+		return x.VectorCount
+	}
+	return 0
+}
+
+func (x *GetEngineStatusResponse) GetIndexLevel() int32 {
+	if x != nil {
+		return x.IndexLevel
+	}
+	return 0
+}
+
+type CreateSnapshotRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TargetPath    string                 `protobuf:"bytes,1,opt,name=target_path,json=targetPath,proto3" json:"target_path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSnapshotRequest) Reset() {
+	*x = CreateSnapshotRequest{}
+	mi := &file_proto_deraine_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSnapshotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSnapshotRequest) ProtoMessage() {}
+
+func (x *CreateSnapshotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_deraine_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSnapshotRequest.ProtoReflect.Descriptor instead.
+func (*CreateSnapshotRequest) Descriptor() ([]byte, []int) {
+	return file_proto_deraine_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CreateSnapshotRequest) GetTargetPath() string {
+	if x != nil {
+		return x.TargetPath
+	}
+	return ""
+}
+
+type CreateSnapshotResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSnapshotResponse) Reset() {
+	*x = CreateSnapshotResponse{}
+	mi := &file_proto_deraine_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSnapshotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSnapshotResponse) ProtoMessage() {}
+
+func (x *CreateSnapshotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_deraine_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSnapshotResponse.ProtoReflect.Descriptor instead.
+func (*CreateSnapshotResponse) Descriptor() ([]byte, []int) {
+	return file_proto_deraine_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateSnapshotResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *CreateSnapshotResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
 type GetStatsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -431,7 +631,7 @@ type GetStatsRequest struct {
 
 func (x *GetStatsRequest) Reset() {
 	*x = GetStatsRequest{}
-	mi := &file_proto_deraine_proto_msgTypes[7]
+	mi := &file_proto_deraine_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -443,7 +643,7 @@ func (x *GetStatsRequest) String() string {
 func (*GetStatsRequest) ProtoMessage() {}
 
 func (x *GetStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_deraine_proto_msgTypes[7]
+	mi := &file_proto_deraine_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -456,7 +656,7 @@ func (x *GetStatsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStatsRequest.ProtoReflect.Descriptor instead.
 func (*GetStatsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_deraine_proto_rawDescGZIP(), []int{7}
+	return file_proto_deraine_proto_rawDescGZIP(), []int{11}
 }
 
 type GetStatsResponse struct {
@@ -469,7 +669,7 @@ type GetStatsResponse struct {
 
 func (x *GetStatsResponse) Reset() {
 	*x = GetStatsResponse{}
-	mi := &file_proto_deraine_proto_msgTypes[8]
+	mi := &file_proto_deraine_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -481,7 +681,7 @@ func (x *GetStatsResponse) String() string {
 func (*GetStatsResponse) ProtoMessage() {}
 
 func (x *GetStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_deraine_proto_msgTypes[8]
+	mi := &file_proto_deraine_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -494,7 +694,7 @@ func (x *GetStatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetStatsResponse.ProtoReflect.Descriptor instead.
 func (*GetStatsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_deraine_proto_rawDescGZIP(), []int{8}
+	return file_proto_deraine_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetStatsResponse) GetVectorCount() uint64 {
@@ -537,7 +737,20 @@ const file_proto_deraine_proto_rawDesc = "" +
 	"\x13DeleteVectorRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\"0\n" +
 	"\x14DeleteVectorResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x11\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x18\n" +
+	"\x16GetEngineStatusRequest\"\x91\x01\n" +
+	"\x17GetEngineStatusResponse\x12\x18\n" +
+	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\x12!\n" +
+	"\fvector_count\x18\x03 \x01(\x04R\vvectorCount\x12\x1f\n" +
+	"\vindex_level\x18\x04 \x01(\x05R\n" +
+	"indexLevel\"8\n" +
+	"\x15CreateSnapshotRequest\x12\x1f\n" +
+	"\vtarget_path\x18\x01 \x01(\tR\n" +
+	"targetPath\"W\n" +
+	"\x16CreateSnapshotResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\"\x11\n" +
 	"\x0fGetStatsRequest\"c\n" +
 	"\x10GetStatsResponse\x12!\n" +
 	"\fvector_count\x18\x01 \x01(\x04R\vvectorCount\x12,\n" +
@@ -545,11 +758,13 @@ const file_proto_deraine_proto_rawDesc = "" +
 	"\n" +
 	"SearchMode\x12\x0f\n" +
 	"\vSEARCH_FLAT\x10\x00\x12\x0f\n" +
-	"\vSEARCH_HNSW\x10\x012\xc4\x02\n" +
+	"\vSEARCH_HNSW\x10\x012\xf9\x03\n" +
 	"\x0eDeraineService\x12N\n" +
 	"\vWriteVector\x12\x1e.deraine.v1.WriteVectorRequest\x1a\x1f.deraine.v1.WriteVectorResponse\x12H\n" +
 	"\tSearchKNN\x12\x1c.deraine.v1.SearchKNNRequest\x1a\x1d.deraine.v1.SearchKNNResponse\x12Q\n" +
-	"\fDeleteVector\x12\x1f.deraine.v1.DeleteVectorRequest\x1a .deraine.v1.DeleteVectorResponse\x12E\n" +
+	"\fDeleteVector\x12\x1f.deraine.v1.DeleteVectorRequest\x1a .deraine.v1.DeleteVectorResponse\x12W\n" +
+	"\x0eCreateSnapshot\x12!.deraine.v1.CreateSnapshotRequest\x1a\".deraine.v1.CreateSnapshotResponse\x12Z\n" +
+	"\x0fGetEngineStatus\x12\".deraine.v1.GetEngineStatusRequest\x1a#.deraine.v1.GetEngineStatusResponse\x12E\n" +
 	"\bGetStats\x12\x1b.deraine.v1.GetStatsRequest\x1a\x1c.deraine.v1.GetStatsResponseB+Z)github.com/ricardo/deraine-db/api/grpc/pbb\x06proto3"
 
 var (
@@ -565,35 +780,43 @@ func file_proto_deraine_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_deraine_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_deraine_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_proto_deraine_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_proto_deraine_proto_goTypes = []any{
-	(SearchMode)(0),              // 0: deraine.v1.SearchMode
-	(*WriteVectorRequest)(nil),   // 1: deraine.v1.WriteVectorRequest
-	(*WriteVectorResponse)(nil),  // 2: deraine.v1.WriteVectorResponse
-	(*SearchKNNRequest)(nil),     // 3: deraine.v1.SearchKNNRequest
-	(*SearchKNNResponse)(nil),    // 4: deraine.v1.SearchKNNResponse
-	(*Match)(nil),                // 5: deraine.v1.Match
-	(*DeleteVectorRequest)(nil),  // 6: deraine.v1.DeleteVectorRequest
-	(*DeleteVectorResponse)(nil), // 7: deraine.v1.DeleteVectorResponse
-	(*GetStatsRequest)(nil),      // 8: deraine.v1.GetStatsRequest
-	(*GetStatsResponse)(nil),     // 9: deraine.v1.GetStatsResponse
+	(SearchMode)(0),                 // 0: deraine.v1.SearchMode
+	(*WriteVectorRequest)(nil),      // 1: deraine.v1.WriteVectorRequest
+	(*WriteVectorResponse)(nil),     // 2: deraine.v1.WriteVectorResponse
+	(*SearchKNNRequest)(nil),        // 3: deraine.v1.SearchKNNRequest
+	(*SearchKNNResponse)(nil),       // 4: deraine.v1.SearchKNNResponse
+	(*Match)(nil),                   // 5: deraine.v1.Match
+	(*DeleteVectorRequest)(nil),     // 6: deraine.v1.DeleteVectorRequest
+	(*DeleteVectorResponse)(nil),    // 7: deraine.v1.DeleteVectorResponse
+	(*GetEngineStatusRequest)(nil),  // 8: deraine.v1.GetEngineStatusRequest
+	(*GetEngineStatusResponse)(nil), // 9: deraine.v1.GetEngineStatusResponse
+	(*CreateSnapshotRequest)(nil),   // 10: deraine.v1.CreateSnapshotRequest
+	(*CreateSnapshotResponse)(nil),  // 11: deraine.v1.CreateSnapshotResponse
+	(*GetStatsRequest)(nil),         // 12: deraine.v1.GetStatsRequest
+	(*GetStatsResponse)(nil),        // 13: deraine.v1.GetStatsResponse
 }
 var file_proto_deraine_proto_depIdxs = []int32{
-	0, // 0: deraine.v1.SearchKNNRequest.mode:type_name -> deraine.v1.SearchMode
-	5, // 1: deraine.v1.SearchKNNResponse.matches:type_name -> deraine.v1.Match
-	1, // 2: deraine.v1.DeraineService.WriteVector:input_type -> deraine.v1.WriteVectorRequest
-	3, // 3: deraine.v1.DeraineService.SearchKNN:input_type -> deraine.v1.SearchKNNRequest
-	6, // 4: deraine.v1.DeraineService.DeleteVector:input_type -> deraine.v1.DeleteVectorRequest
-	8, // 5: deraine.v1.DeraineService.GetStats:input_type -> deraine.v1.GetStatsRequest
-	2, // 6: deraine.v1.DeraineService.WriteVector:output_type -> deraine.v1.WriteVectorResponse
-	4, // 7: deraine.v1.DeraineService.SearchKNN:output_type -> deraine.v1.SearchKNNResponse
-	7, // 8: deraine.v1.DeraineService.DeleteVector:output_type -> deraine.v1.DeleteVectorResponse
-	9, // 9: deraine.v1.DeraineService.GetStats:output_type -> deraine.v1.GetStatsResponse
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0,  // 0: deraine.v1.SearchKNNRequest.mode:type_name -> deraine.v1.SearchMode
+	5,  // 1: deraine.v1.SearchKNNResponse.matches:type_name -> deraine.v1.Match
+	1,  // 2: deraine.v1.DeraineService.WriteVector:input_type -> deraine.v1.WriteVectorRequest
+	3,  // 3: deraine.v1.DeraineService.SearchKNN:input_type -> deraine.v1.SearchKNNRequest
+	6,  // 4: deraine.v1.DeraineService.DeleteVector:input_type -> deraine.v1.DeleteVectorRequest
+	10, // 5: deraine.v1.DeraineService.CreateSnapshot:input_type -> deraine.v1.CreateSnapshotRequest
+	8,  // 6: deraine.v1.DeraineService.GetEngineStatus:input_type -> deraine.v1.GetEngineStatusRequest
+	12, // 7: deraine.v1.DeraineService.GetStats:input_type -> deraine.v1.GetStatsRequest
+	2,  // 8: deraine.v1.DeraineService.WriteVector:output_type -> deraine.v1.WriteVectorResponse
+	4,  // 9: deraine.v1.DeraineService.SearchKNN:output_type -> deraine.v1.SearchKNNResponse
+	7,  // 10: deraine.v1.DeraineService.DeleteVector:output_type -> deraine.v1.DeleteVectorResponse
+	11, // 11: deraine.v1.DeraineService.CreateSnapshot:output_type -> deraine.v1.CreateSnapshotResponse
+	9,  // 12: deraine.v1.DeraineService.GetEngineStatus:output_type -> deraine.v1.GetEngineStatusResponse
+	13, // 13: deraine.v1.DeraineService.GetStats:output_type -> deraine.v1.GetStatsResponse
+	8,  // [8:14] is the sub-list for method output_type
+	2,  // [2:8] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_proto_deraine_proto_init() }
@@ -607,7 +830,7 @@ func file_proto_deraine_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_deraine_proto_rawDesc), len(file_proto_deraine_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   9,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

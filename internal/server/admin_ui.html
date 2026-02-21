@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeraineDB | Admin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #0f1115;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 50px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #2a2d35;
+            padding-bottom: 20px;
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .healthy { background-color: #1b5e20; color: #a5d6a7; }
+        .error { background-color: #b71c1c; color: #ef9a9a; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .card {
+            background-color: #1a1d23;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #2d3139;
+            text-align: center;
+        }
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin: 10px 0;
+        }
+        .card-label {
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8em;
+        }
+        .actions {
+            margin-top: 40px;
+            text-align: center;
+        }
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .graph-preview {
+            margin-top: 40px;
+            background-color: #1a1d23;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #2d3139;
+        }
+        .layer-bar {
+            height: 20px;
+            background: #0288d1;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1 style="margin: 0; color: #4fc3f7;">DeraineDB <span style="font-weight: 300; font-size: 0.6em; color: #888;">Admin</span></h1>
+                <p style="margin: 5px 0; color: #888;">Hardware-First Vector Intelligence (v2.0)</p>
+            </div>
+            <div id="health" class="status-badge healthy">SYSTEM HEALTHY</div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-label">Stored Vectors</div>
+                <div id="vector_count" class="card-value">0</div>
+            </div>
+            <div class="card">
+                <div class="card-label">HNSW Max Level</div>
+                <div id="max_level" class="card-value">-1</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Allocated Memory</div>
+                <div id="memory" class="card-value">--</div>
+            </div>
+        </div>
+
+        <div class="graph-preview">
+            <h3>HNSW Hierarchy Visualization</h3>
+            <div id="layers">
+                <!-- Layers will be populated here -->
+            </div>
+        </div>
+
+        <div class="actions">
+            <button onclick="triggerSnapshot()">Initiate Atomic Snapshot</button>
+        </div>
+    </div>
+
+    <script>
+        async function updateStats() {
+            try {
+                // In a real app, this would be an AJAX call to a Go endpoint
+                // For the MVP, we can simulate or use the GetEngineStatus data
+                // We will add a /api/health endpoint to Go for this.
+                const res = await fetch('/api/health');
+                const data = await res.json();
+                
+                document.getElementById('vector_count').innerText = data.vector_count;
+                document.getElementById('max_level').innerText = data.index_level;
+                
+                const layersDiv = document.getElementById('layers');
+                layersDiv.innerHTML = '';
+                for(let i=0; i <= data.index_level; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'layer-bar';
+                    bar.style.width = Math.max(10, 100 - (i * 10)) + '%';
+                    bar.title = 'Layer ' + i;
+                    layersDiv.appendChild(bar);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function triggerSnapshot() {
+            if(!confirm('This will lock the engine briefly for an atomic point-in-time copy. Proceed?')) return;
+            const res = await fetch('/api/snapshot', { method: 'POST' });
+            if(res.ok) alert('Snapshot Created Successfully!');
+            else alert('Snapshot Failed!');
+        }
+
+        setInterval(updateStats, 2000);
+        updateStats();
+    </script>
+</body>
+</html>

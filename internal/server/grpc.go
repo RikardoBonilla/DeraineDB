@@ -96,6 +96,45 @@ func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest)
 	return &pb.SearchKNNResponse{Matches: pbMatches}, nil
 }
 
+func (s *DeraineServer) GetEngineStatus(ctx context.Context, req *pb.GetEngineStatusRequest) (*pb.GetEngineStatusResponse, error) {
+	var status C.deraine_status_t
+	res := C.deraine_get_status(s.dbHandle, &status)
+	if res != 0 {
+		return &pb.GetEngineStatusResponse{Healthy: false}, fmt.Errorf("failed to get engine status")
+	}
+
+	return &pb.GetEngineStatusResponse{
+		Healthy:     status.healthy != 0,
+		Version:     fmt.Sprintf("v%d.0", status.version),
+		VectorCount: uint64(status.vector_count),
+		IndexLevel:  int32(status.max_level),
+	}, nil
+}
+
+func (s *DeraineServer) CreateSnapshot(ctx context.Context, req *pb.CreateSnapshotRequest) (*pb.CreateSnapshotResponse, error) {
+	if req.TargetPath == "" {
+		return &pb.CreateSnapshotResponse{Success: false, ErrorMessage: "target path cannot be empty"}, nil
+	}
+
+	cPath := C.CString(req.TargetPath)
+	defer C.free(unsafe.Pointer(cPath))
+
+	res := C.deraine_create_snapshot(s.dbHandle, cPath)
+	if res != 0 {
+		return &pb.CreateSnapshotResponse{Success: false, ErrorMessage: fmt.Sprintf("snapshot failed with code %d", res)}, nil
+	}
+
+	return &pb.CreateSnapshotResponse{Success: true}, nil
+}
+
+func (s *DeraineServer) RebuildIndex() error {
+	res := C.deraine_rebuild_index(s.dbHandle)
+	if res != 0 {
+		return fmt.Errorf("rebuild failed with code %d", res)
+	}
+	return nil
+}
+
 func (s *DeraineServer) DeleteVector(ctx context.Context, req *pb.DeleteVectorRequest) (*pb.DeleteVectorResponse, error) {
 	res := C.deraine_delete_vector(s.dbHandle, C.uint64_t(req.Id))
 	if res != 0 {

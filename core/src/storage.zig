@@ -14,6 +14,8 @@ pub const StorageError = error{
 };
 
 pub const Storage = struct {
+    allocator: std.mem.Allocator,
+    base_path: []const u8,
     file: std.fs.File,
     memory: []align(4096) u8,
     header: *root.DeraineHeader,
@@ -24,7 +26,7 @@ pub const Storage = struct {
 
     lock: std.Thread.RwLock = .{},
 
-    pub fn create(path: []const u8) !Storage {
+    pub fn create(allocator: std.mem.Allocator, path: []const u8) !Storage {
         var file = std.fs.cwd().createFile(path, .{ .read = true, .truncate = true }) catch |e| {
             std.debug.print("createFile error: {}\n", .{e});
             return StorageError.FileCreateError;
@@ -81,6 +83,8 @@ pub const Storage = struct {
         };
 
         return Storage{
+            .allocator = allocator,
+            .base_path = try allocator.dupe(u8, path),
             .file = file,
             .memory = memory,
             .header = header,
@@ -91,7 +95,7 @@ pub const Storage = struct {
         };
     }
 
-    pub fn open(path: []const u8) !Storage {
+    pub fn open(allocator: std.mem.Allocator, path: []const u8) !Storage {
         const file = std.fs.cwd().openFile(path, .{ .mode = .read_write }) catch return StorageError.FileOpenError;
         errdefer file.close();
         const stat = try file.stat();
@@ -129,6 +133,8 @@ pub const Storage = struct {
         if (!std.mem.eql(u8, &idx_header.magic, "DR_INDEX")) return StorageError.InvalidHeader;
 
         return Storage{
+            .allocator = allocator,
+            .base_path = try allocator.dupe(u8, path),
             .file = file,
             .memory = memory,
             .header = header,
@@ -182,6 +188,85 @@ pub const Storage = struct {
         const new_memory = std.posix.mmap(null, new_size, std.posix.PROT.READ | std.posix.PROT.WRITE, .{ .TYPE = .SHARED }, self.index_file.handle, 0) catch return StorageError.MapError;
         self.index_memory = new_memory;
         self.index_header = @as(*root.IndexHeader, @ptrCast(self.index_memory.ptr));
+    }
+
+    pub fn createSnapshot(self: *Storage, target_path: []const u8) !void {
+        self.lock.lock();
+        defer self.lock.unlock();
+
+        try self.internal_sync();
+
+        var idx_source_buf: [512]u8 = undefined;
+        const idx_source = try std.fmt.bufPrint(&idx_source_buf, "{s}.dridx", .{self.base_path});
+
+        var drb_target_buf: [512]u8 = undefined;
+        const drb_target = try std.fmt.bufPrint(&drb_target_buf, "{s}.drb", .{target_path});
+
+        var idx_target_buf: [512]u8 = undefined;
+        const idx_target = try std.fmt.bufPrint(&idx_target_buf, "{s}.dridx", .{target_path});
+
+        try std.fs.cwd().copyFile(self.base_path, std.fs.cwd(), drb_target, .{});
+        try std.fs.cwd().copyFile(idx_source, std.fs.cwd(), idx_target, .{});
+    }
+
+    pub fn rebuildIndex(self: *Storage) !void {
+        self.lock.lock();
+        defer self.lock.unlock();
+
+        self.index_header.entry_point_id = 0;
+        self.index_header.max_level = -1;
+
+        var i: u64 = 0;
+        const dim = 4;
+        while (i < self.header.vector_count) : (i += 1) {
+            const data = try self.readVectorInternal(i, dim);
+            try self.insertVectorHNSWInternal(i, data);
+        }
+    }
+
+    fn readVectorInternal(self: *Storage, index: u64, dim: u32) ![]const f32 {
+        const header_size = @sizeOf(root.DeraineHeader);
+        const vector_size = 64;
+        const offset = header_size + (index * vector_size);
+        const block = self.memory[offset .. offset + vector_size];
+        const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
+        if (meta.status == 0x01) return StorageError.VectorDeleted;
+        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
+        return data_ptr[0..dim];
+    }
+
+    fn insertVectorHNSWInternal(self: *Storage, index: u64, query: []const f32) !void {
+        const level = getRandomLevel();
+        const node = self.getIndexNode(index);
+        node.max_level = level;
+        for (0..root.HNSW_MAX_LEVEL) |l| {
+            node.layers[l].neighbor_count = 0;
+        }
+
+        if (self.index_header.max_level == -1) {
+            self.index_header.entry_point_id = index;
+            self.index_header.max_level = level;
+            return;
+        }
+
+        var current_entry = self.index_header.entry_point_id;
+        const current_max_level = self.index_header.max_level;
+
+        var l = current_max_level;
+        while (l > level) : (l -= 1) {
+            current_entry = self.searchLayer(query, current_entry, l, 0);
+        }
+
+        l = @min(level, current_max_level);
+        while (l >= 0) : (l -= 1) {
+            current_entry = self.searchLayer(query, current_entry, l, 0);
+            const target_node = self.getIndexNode(current_entry);
+            const target_adj = &target_node.layers[@as(usize, @intCast(l))];
+            if (target_adj.neighbor_count < root.HNSW_M) {
+                target_adj.neighbors[target_adj.neighbor_count] = index;
+                target_adj.neighbor_count += 1;
+            }
+        }
     }
 
     fn getIndexNode(self: *Storage, index: u64) *root.IndexNode {

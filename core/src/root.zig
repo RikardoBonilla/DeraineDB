@@ -90,10 +90,10 @@ export fn deraine_open_db(path: [*:0]const u8) ?*storage.Storage {
         return null;
     };
 
-    if (storage.Storage.open(path_slice)) |opened_store| {
+    if (storage.Storage.open(allocator, path_slice)) |opened_store| {
         store.* = opened_store;
     } else |_| {
-        if (storage.Storage.create(path_slice)) |created_store| {
+        if (storage.Storage.create(allocator, path_slice)) |created_store| {
             store.* = created_store;
         } else |_| {
             allocator.destroy(store);
@@ -114,6 +114,40 @@ export fn deraine_sync(storage_ptr: *storage.Storage) i32 {
     storage_ptr.sync() catch |err| {
         std.debug.print("Sync Error: {}\n", .{err});
         return -1;
+    };
+    return 0;
+}
+
+export fn deraine_create_snapshot(storage_ptr: *storage.Storage, target_path_ptr: [*:0]const u8) i32 {
+    const path = std.mem.span(target_path_ptr);
+    storage_ptr.createSnapshot(path) catch |err| {
+        std.debug.print("Snapshot Error: {}\n", .{err});
+        return -1;
+    };
+    return 0;
+}
+
+export fn deraine_rebuild_index(storage_ptr: *storage.Storage) i32 {
+    storage_ptr.rebuildIndex() catch |err| {
+        std.debug.print("Rebuild Error: {}\n", .{err});
+        return -1;
+    };
+    return 0;
+}
+
+pub const DeraineStatus = extern struct {
+    healthy: u8,
+    version: u32,
+    vector_count: u64,
+    max_level: i32,
+};
+
+export fn deraine_get_status(storage_ptr: *storage.Storage, out_status: *DeraineStatus) i32 {
+    out_status.* = .{
+        .healthy = 1,
+        .version = storage_ptr.header.version,
+        .vector_count = storage_ptr.header.vector_count,
+        .max_level = storage_ptr.index_header.max_level,
     };
     return 0;
 }

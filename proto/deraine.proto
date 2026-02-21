@@ -8,6 +8,8 @@ service DeraineService {
   rpc WriteVector (WriteVectorRequest) returns (WriteVectorResponse);
   rpc SearchKNN (SearchKNNRequest) returns (SearchKNNResponse);
   rpc DeleteVector (DeleteVectorRequest) returns (DeleteVectorResponse);
+  rpc CreateSnapshot (CreateSnapshotRequest) returns (CreateSnapshotResponse);
+  rpc GetEngineStatus (GetEngineStatusRequest) returns (GetEngineStatusResponse);
   rpc GetStats (GetStatsRequest) returns (GetStatsResponse);
 }
 
@@ -48,6 +50,24 @@ message DeleteVectorRequest {
 
 message DeleteVectorResponse {
    bool success = 1;
+}
+
+message GetEngineStatusRequest {}
+
+message GetEngineStatusResponse {
+  bool healthy = 1;
+  string version = 2;
+  uint64 vector_count = 3;
+  int32 index_level = 4;
+}
+
+message CreateSnapshotRequest {
+  string target_path = 1;
+}
+
+message CreateSnapshotResponse {
+  bool success = 1;
+  string error_message = 2;
 }
 
 message GetStatsRequest {}

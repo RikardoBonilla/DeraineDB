@@ -46,4 +46,7 @@ go.work.sum
 # DeraineDB Datos Locales y Logs
 # ==========================================
 *.drb
+*.dridx
 *.log
+backup_sprint11*
+test_hnsw*
