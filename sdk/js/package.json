@@ -1,0 +1,17 @@
+{
+    "name": "derainedb-js",
+    "version": "2.0.0",
+    "description": "Official JS/TS SDK for DeraineDB Vector Engine",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@grpc/grpc-js": "^1.9.0",
+        "google-protobuf": "^3.21.2"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.0"
+    }
+}

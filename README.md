@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" width="250" alt="DeraineDB Logo">
+</p>
+
 # DeraineDB
 
 > **The 1.8MB Vector Engine that thinks in Microseconds.**
@@ -23,9 +27,9 @@ Engineered for speed, DeraineDB (v2.0) leverages advanced indexing and hardware 
 ---
 
 ## 🏗️ Architecture
-- **64-byte Alignment:** Every vector is perfectly aligned to CPU cache lines to prevent bouncing and maximize throughput.
+- **64-byte Alignment:** Every vector is aligned to CPU cache lines to prevent bouncing and maximize throughput.
 - **Auto-Heal Recovery:** Automatic HNSW reconstruction if the index is out-of-sync or missing.
-- **Atomic Snapshots:** Point-in-time point backups using exclusive RWLock and forced `msync`.
+- **Atomic Snapshots:** Point-in-time backups using exclusive RWLock and forced `msync`.
 - **Hybrid Stack:** Zig handles memory/math; Go handles gRPC, metrics, and API orchestration.
 
 ---
@@ -33,31 +37,40 @@ Engineered for speed, DeraineDB (v2.0) leverages advanced indexing and hardware 
 ## 🚀 Quick Start (Python)
 
 ```python
-import grpc
-import deraine_pb2
-import deraine_pb2_grpc
+from derainedb import DeraineClient
 
 # Connect to DeraineDB (default :50051)
-channel = grpc.insecure_channel('localhost:50051')
-stub = deraine_pb2_grpc.DeraineServiceStub(channel)
+client = DeraineClient(host="localhost", port=50051)
 
 # Ingest a vector with a categorical mask
-stub.WriteVector(deraine_pb2.WriteVectorRequest(
-    id=1001,
-    data=[1.1, 2.2, 3.3, 4.4],
-    metadata_mask=0x01 # Category: Images
-))
+client.write(id=1001, data=[1.1, 2.2, 3.3, 4.4], mask=0x01)
 
 # Search with filters
-response = stub.SearchKNN(deraine_pb2.SearchKNNRequest(
-    query=[1.0, 2.0, 3.0, 4.0],
-    k=3,
-    filter_mask=0x01
-))
+results = client.search(query=[1.0, 2.0, 3.0, 4.0], k=3, mask=0x01)
 
-for match in response.matches:
-    print(f"ID: {match.id}, Score: {match.distance}")
+for match in results:
+    print(f"ID: {match['id']}, Score: {match['distance']}")
 ```
+
+---
+
+## 🌐 Ecosystem & SDKs
+DeraineDB (v2.0.0) provides official high-performance clients for modern stacks:
+
+*   **[Go SDK](sdk/go):** Native orchestration with connection pooling.
+*   **[Python SDK](sdk/python):** AI-ready wrapper with latency instrumentation.
+*   **[Rust SDK](sdk/rust):** Zero-cost async client using `tonic`.
+*   **[JS/TS SDK](sdk/js):** Web and Node.js compatible (via gRPC).
+
+> [!TIP]
+> Check the **[Quickstart Comparison](docs/quickstart-comparison.md)** to see side-by-side examples.
+
+---
+
+## 📚 Technical Documentation
+*   **[Installation Guide](docs/installation.md):** Deep-dive into building the core and orchestrator.
+*   **[Metadata Filtering](docs/metadata-filtering.md):** How the 64-bit hardware-first mask works.
+*   **[API Reference](docs/api-reference.md):** Complete gRPC method documentation.
 
 ---
 

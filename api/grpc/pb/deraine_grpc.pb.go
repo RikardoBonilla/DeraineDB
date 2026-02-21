@@ -8,14 +8,12 @@ package pb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 )
 
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.64.0 or later.
 const _ = grpc.SupportPackageIsVersion9
 
 const (
@@ -27,9 +25,6 @@ const (
 	DeraineService_GetStats_FullMethodName        = "/deraine.v1.DeraineService/GetStats"
 )
 
-// DeraineServiceClient is the client API for DeraineService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DeraineServiceClient interface {
 	WriteVector(ctx context.Context, in *WriteVectorRequest, opts ...grpc.CallOption) (*WriteVectorResponse, error)
 	SearchKNN(ctx context.Context, in *SearchKNNRequest, opts ...grpc.CallOption) (*SearchKNNResponse, error)
@@ -107,9 +102,6 @@ func (c *deraineServiceClient) GetStats(ctx context.Context, in *GetStatsRequest
 	return out, nil
 }
 
-// DeraineServiceServer is the server API for DeraineService service.
-// All implementations must embed UnimplementedDeraineServiceServer
-// for forward compatibility.
 type DeraineServiceServer interface {
 	WriteVector(context.Context, *WriteVectorRequest) (*WriteVectorResponse, error)
 	SearchKNN(context.Context, *SearchKNNRequest) (*SearchKNNResponse, error)
@@ -120,11 +112,6 @@ type DeraineServiceServer interface {
 	mustEmbedUnimplementedDeraineServiceServer()
 }
 
-// UnimplementedDeraineServiceServer must be embedded to have
-// forward compatible implementations.
-//
-// NOTE: this should be embedded by value instead of pointer to avoid a nil
-// pointer dereference when methods are called.
 type UnimplementedDeraineServiceServer struct{}
 
 func (UnimplementedDeraineServiceServer) WriteVector(context.Context, *WriteVectorRequest) (*WriteVectorResponse, error) {
@@ -148,18 +135,11 @@ func (UnimplementedDeraineServiceServer) GetStats(context.Context, *GetStatsRequ
 func (UnimplementedDeraineServiceServer) mustEmbedUnimplementedDeraineServiceServer() {}
 func (UnimplementedDeraineServiceServer) testEmbeddedByValue()                        {}
 
-// UnsafeDeraineServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to DeraineServiceServer will
-// result in compilation errors.
 type UnsafeDeraineServiceServer interface {
 	mustEmbedUnimplementedDeraineServiceServer()
 }
 
 func RegisterDeraineServiceServer(s grpc.ServiceRegistrar, srv DeraineServiceServer) {
-	// If the following call panics, it indicates UnimplementedDeraineServiceServer was
-	// embedded by pointer and is nil.  This will cause panics if an
-	// unimplemented method is ever invoked, so we test this at initialization
-	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
@@ -274,9 +254,6 @@ func _DeraineService_GetStats_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-// DeraineService_ServiceDesc is the grpc.ServiceDesc for DeraineService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
 var DeraineService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "deraine.v1.DeraineService",
 	HandlerType: (*DeraineServiceServer)(nil),

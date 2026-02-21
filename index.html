@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeraineDB | The 1.8MB Vector Engine</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero {
+            padding: 80px 20px;
+            text-align: center;
+            background: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
+            width: 100%;
+        }
+
+        .logo {
+            width: 180px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            color: #58a6ff;
+            margin: 10px 0;
+        }
+
+        .tagline {
+            font-size: 1.5em;
+            color: #8b949e;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .benchmarks {
+            display: flex;
+            gap: 30px;
+            margin: 50px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-card {
+            background-color: #161b22;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3fb950;
+        }
+
+        .stat-label {
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-section {
+            margin: 60px 0;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            background-color: #238636;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 1px solid #30363d;
+            width: 100%;
+            text-align: center;
+            color: #484f58;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="hero">
+        <img src="assets/logo.png" class="logo" alt="DeraineDB Logo">
+        <h1>DeraineDB <span style="font-weight: 300; color: #8b949e;">v2.0</span></h1>
+        <p class="tagline">The High-Performance Vector Engine that thinks in Microseconds.</p>
+
+        <div class="benchmarks">
+            <div class="stat-card">
+                <div class="stat-value">0.77ms</div>
+                <div class="stat-label">Search Latency</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">1.8 MB</div>
+                <div class="stat-label">Binary Size</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">64-bit</div>
+                <div class="stat-label">Metadata Mask</div>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <a href="https://github.com/RikardoBonilla/DeraineDB" class="btn">View on GitHub</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>Built with Zig & Go | Licensed under Apache-2.0</p>
+    </footer>
+</body>
+
+</html>
