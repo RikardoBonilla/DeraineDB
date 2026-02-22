@@ -145,10 +145,6 @@ pub const Storage = struct {
         };
     }
 
-    const c = @cImport({
-        @cInclude("sys/mman.h");
-    });
-
     pub fn deinit(self: *Storage) void {
         self.lock.lock();
         defer self.lock.unlock();
@@ -160,8 +156,23 @@ pub const Storage = struct {
     }
 
     fn internal_sync(self: *Storage) StorageError!void {
-        std.posix.msync(self.memory, c.MS_SYNC) catch return StorageError.MapError;
-        std.posix.msync(self.index_memory, c.MS_SYNC) catch return StorageError.MapError;
+        const ms_sync = comptime blk: {
+            if (@hasDecl(std.posix, "MS_SYNC")) break :blk @as(u32, std.posix.MS_SYNC);
+            if (@hasDecl(std.posix, "MS")) if (@hasDecl(std.posix.MS, "SYNC")) break :blk @as(u32, std.posix.MS.SYNC);
+
+            if (@hasDecl(std.os, "MS_SYNC")) break :blk @as(u32, std.os.MS_SYNC);
+            if (@hasDecl(std.os, "MS")) if (@hasDecl(std.os.MS, "SYNC")) break :blk @as(u32, std.os.MS.SYNC);
+
+            if (@hasDecl(std.os.linux, "MS_SYNC")) break :blk @as(u32, std.os.linux.MS_SYNC);
+
+            const os_tag = @import("builtin").target.os.tag;
+            if (os_tag == .linux) break :blk 4;
+            if (os_tag == .macos or os_tag == .ios or os_tag == .tvos or os_tag == .watchos) break :blk 16;
+
+            break :blk 0;
+        };
+        std.posix.msync(self.memory, ms_sync) catch return StorageError.MapError;
+        std.posix.msync(self.index_memory, ms_sync) catch return StorageError.MapError;
     }
 
     pub fn sync(self: *Storage) StorageError!void {

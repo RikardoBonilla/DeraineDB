@@ -4,25 +4,21 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const mod = b.createModule(.{
+    const lib = b.addStaticLibrary(.{
+        .name = "core",
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
-    });
-
-    const lib = b.addLibrary(.{
-        .linkage = .static,
-        .name = "core",
-        .root_module = mod,
     });
     b.installArtifact(lib);
 
     const install_header = b.addInstallFile(b.path("include/deraine_core.h"), "include/deraine_core.h");
     b.getInstallStep().dependOn(&install_header.step);
 
-    // --- Configuración de Tests ---
     const lib_unit_tests = b.addTest(.{
-        .root_module = mod,
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
     });
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
