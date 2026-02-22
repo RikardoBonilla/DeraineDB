@@ -1,4 +1,4 @@
-module github.com/ricardo/deraine-db/sdk/go
+module github.com/RikardoBonilla/DeraineDB/sdk/go
 
 go 1.25
 

@@ -4,126 +4,610 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeraineDB | The 1.8MB Vector Engine</title>
+    <title>DeraineDB | Technical Showcase v2.0-stable</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #0d1117;
+            --container-bg: #161b22;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #bc8cff;
+            --accent-orange: #f0883e;
+            --glass-bg: rgba(22, 27, 34, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #0d1117;
-            color: #c9d1d9;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             margin: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 0.8rem 2rem;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .hero {
-            padding: 80px 20px;
-            text-align: center;
-            background: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
-            width: 100%;
-        }
-
-        .logo {
-            width: 180px;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-size: 3.5em;
-            color: #58a6ff;
-            margin: 10px 0;
-        }
-
-        .tagline {
-            font-size: 1.5em;
-            color: #8b949e;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .benchmarks {
+        nav .logo-text {
+            font-weight: 800;
+            color: var(--accent-blue);
+            font-size: 1.4rem;
+            text-decoration: none;
             display: flex;
-            gap: 30px;
-            margin: 50px 0;
-            flex-wrap: wrap;
-            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
-        .stat-card {
-            background-color: #161b22;
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid #30363d;
-            min-width: 200px;
-            text-align: center;
+        nav .nav-links {
+            display: flex;
+            gap: 2rem;
         }
 
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #3fb950;
-        }
-
-        .stat-label {
-            color: #8b949e;
+        nav .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: color 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .cta-section {
-            margin: 60px 0;
+        nav .nav-links a:hover {
+            color: var(--accent-blue);
         }
 
-        .btn {
-            padding: 15px 40px;
-            background-color: #238636;
-            color: white;
+        /* Hero Section */
+        .hero {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            background: radial-gradient(circle at 50% 40%, rgba(88, 166, 255, 0.1) 0%, rgba(13, 17, 23, 0) 60%);
+        }
+
+        .hero-badge {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--accent-green);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(63, 185, 80, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: 5rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(to bottom, #fff 40%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -3px;
+            line-height: 1;
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin-top: 1.5rem;
+            font-weight: 300;
+        }
+
+        /* Common Section Styles */
+        section {
+            padding: 120px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-tag {
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 3rem;
+            margin: 0 0 3rem 0;
+            letter-spacing: -1.5px;
+            font-weight: 800;
+        }
+
+        /* Hardware-First Architecture */
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .arch-card {
+            background: var(--container-bg);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arch-card h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 1.3rem;
+        }
+
+        .arch-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .arch-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* The Journey Timeline */
+        .timeline-container {
+            position: relative;
+            padding: 60px 0;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, var(--border-color), transparent);
+            transform: translateX(-50%);
+        }
+
+        .sprint-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .sprint-content {
+            width: 42%;
+            background: var(--container-bg);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s;
+        }
+
+        .sprint-block:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .sprint-marker {
+            position: absolute;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            background: var(--bg-color);
+            border: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+        }
+
+        .sprint-title {
+            color: var(--accent-blue);
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Metrics & Observability */
+        .metrics-full {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .stats-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: rgba(88, 166, 255, 0.05);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .stat-item .val {
+            font-size: 2rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .stat-item .lbl {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .obs-visual {
+            background: #000;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            position: relative;
+        }
+
+        .obs-header {
+            background: #1c1c1c;
+            padding: 8px 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* SDK Component */
+        .sdk-center {
+            background: var(--container-bg);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .sdk-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sdk-tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: 0.2s;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .sdk-tab.active {
+            color: var(--accent-blue);
+            background: var(--container-bg);
+        }
+
+        .code-window {
+            padding: 30px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            min-height: 300px;
+        }
+
+        .btn-main {
+            padding: 14px 35px;
+            background: var(--accent-blue);
+            color: #fff;
             text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 1.1em;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: 0.2s;
+            margin-top: 2rem;
+            display: inline-block;
         }
 
         footer {
-            margin-top: 50px;
-            padding: 20px;
-            border-top: 1px solid #30363d;
-            width: 100%;
+            padding: 80px 20px;
+            border-top: 1px solid var(--border-color);
             text-align: center;
-            color: #484f58;
+        }
+
+        /* Utilities */
+        .highlight {
+            color: var(--accent-blue);
+        }
+
+        .success {
+            color: var(--accent-green);
+        }
+
+        @media (max-width: 900px) {
+            h1 {
+                font-size: 3.5rem;
+            }
+
+            .arch-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-full {
+                grid-template-columns: 1fr;
+            }
+
+            .sprint-content {
+                width: 85%;
+            }
+
+            .timeline-line {
+                left: 20px;
+            }
+
+            .sprint-marker {
+                left: 20px;
+            }
+
+            .sprint-block {
+                justify-content: flex-start;
+                padding-left: 50px;
+            }
+
+            .sprint-block:nth-child(even) {
+                flex-direction: row;
+                padding-left: 50px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <section class="hero">
-        <img src="assets/logo.png" class="logo" alt="DeraineDB Logo">
-        <h1>DeraineDB <span style="font-weight: 300; color: #8b949e;">v2.0</span></h1>
-        <p class="tagline">The High-Performance Vector Engine that thinks in Microseconds.</p>
+    <nav>
+        <a href="#" class="logo-text"><span>⚡</span> DeraineDB</a>
+        <div class="nav-links">
+            <a href="#journey">The Journey</a>
+            <a href="#architecture">Hardware-First</a>
+            <a href="#observability">Observability</a>
+            <a href="#sdks">Ecosystem</a>
+        </div>
+    </nav>
 
-        <div class="benchmarks">
-            <div class="stat-card">
-                <div class="stat-value">0.77ms</div>
-                <div class="stat-label">Search Latency</div>
+    <header class="hero">
+        <div class="hero-badge">Build 2026.02.22 Verificado</div>
+        <h1>Performance in its Purest Form.</h1>
+        <p>A "Hardware-First" vector engine bridging <span class="highlight">Zig's</span> bare-metal speed with <span
+                class="highlight">Go's</span> massive orchestration. Embedded, concurrent, and ultra-lightweight.</p>
+        <a href="https://github.com/RikardoBonilla/DeraineDB" class="btn-main">Get v2.0-stable</a>
+    </header>
+
+    <section id="journey">
+        <span class="section-tag">Historical Narrative</span>
+        <h2>The Journey: From Core to Ecosystem</h2>
+        <div class="timeline-container">
+            <div class="timeline-line"></div>
+
+            <div class="sprint-block">
+                <div class="sprint-marker"></div>
+                <div class="sprint-content">
+                    <span class="sprint-title">Sprints 1-3: Foundations</span>
+                    <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Creación del motor base en
+                        <span class="highlight">Zig</span>. Implementación de Flat Search y el sistema de almacenamiento
+                        alineado a caché lines.</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">1.8 MB</div>
-                <div class="stat-label">Binary Size</div>
+
+            <div class="sprint-block">
+                <div class="sprint-marker"></div>
+                <div class="sprint-content">
+                    <span class="sprint-title">Sprints 4-6: Acceleration</span>
+                    <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Integración de <span
+                            class="highlight">SIMD (@Vector)</span> para distancias euclidianas y el algoritmo <span
+                            class="highlight">HNSW</span> para búsquedas $O(\log N)$.</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">64-bit</div>
-                <div class="stat-label">Metadata Mask</div>
+
+            <div class="sprint-block">
+                <div class="sprint-marker"></div>
+                <div class="sprint-content">
+                    <span class="sprint-title">Sprints 7-9: Orchestration</span>
+                    <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Desarrollo del <span
+                            class="highlight">CGO Bridge</span> y el servidor gRPC en Go. Nace el sistema de máscaras de
+                        metadatos de 64-bits.</p>
+                </div>
+            </div>
+
+            <div class="sprint-block">
+                <div class="sprint-marker"></div>
+                <div class="sprint-content">
+                    <span class="sprint-title">Sprints 10-13: Stability</span>
+                    <p style="margin:0; font-size: 0.9rem; color: var(--text-secondary);">Persistence via <span
+                            class="highlight">mmap</span>, snapshots atómicos, observabilidad nativa y despliegue de los
+                        4 SDKs oficiales.</p>
+                </div>
             </div>
         </div>
+    </section>
 
-        <div class="cta-section">
-            <a href="https://github.com/RikardoBonilla/DeraineDB" class="btn">View on GitHub</a>
+    <section id="architecture" style="background: rgba(22, 27, 34, 0.4); border-radius: 40px;">
+        <span class="section-tag">Deep Engineering</span>
+        <h2>Hardware-First Architecture</h2>
+        <div class="arch-grid">
+            <div class="arch-card">
+                <span class="arch-icon">🚀</span>
+                <h3>64-byte Cache Alignment</h3>
+                <p>Todos los vectores están alineados a líneas de caché del CPU, eliminando el "cache bouncing" y
+                    maxificando el ancho de banda de memoria.</p>
+            </div>
+            <div class="arch-card">
+                <span class="arch-icon">🧠</span>
+                <h3>Zero-Copy mmap</h3>
+                <p>Mapeo directo de archivos al espacio de direcciones virtual. Sin buffers intermedios, sin sobrecarga
+                    de syscalls read/write.</p>
+            </div>
+            <div class="arch-card">
+                <span class="arch-icon">🛡️</span>
+                <h3>64-bit Mask Filter</h3>
+                <p>Filtrado categórico por hardware antes de la computación pesada. Descarta millones de vectores con
+                    una sola instrucción AND.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="observability">
+        <span class="section-tag">Production Ready</span>
+        <h2>Metrics & Observability</h2>
+        <div class="metrics-full">
+            <div class="stats-display">
+                <div class="stat-item">
+                    <span class="val">0.77ms</span>
+                    <span class="lbl">Latency (100k vec)</span>
+                </div>
+                <div class="stat-item" style="border-left-color: var(--accent-green);">
+                    <span class="val">1.8MB</span>
+                    <span class="lbl">Binary Size</span>
+                </div>
+                <div class="stat-item" style="border-left-color: var(--accent-purple);">
+                    <span class="val">Auto</span>
+                    <span class="lbl">Heal Recovery</span>
+                </div>
+                <div class="stat-item" style="border-left-color: var(--accent-orange);">
+                    <span class="val">Prom</span>
+                    <span class="lbl">Native Exporter</span>
+                </div>
+            </div>
+            <div class="obs-visual">
+                <div class="obs-header">
+                    <div class="dot" style="background:#ff5f56"></div>
+                    <div class="dot" style="background:#ffbd2e"></div>
+                    <div class="dot" style="background:#27c93f"></div>
+                    <span style="font-size: 0.7rem; color: #666; margin-left: auto;">Admin Dashboard v2.0</span>
+                </div>
+                <pre style="margin:0; padding:20px; font-size: 0.8rem; color: var(--accent-green);">
+{
+  "status": "HEALTHY",
+  "engine": "Deraine_v2.0_Zig",
+  "vectors": 140292,
+  "hnsw_level": 4,
+  "last_msync": "2s ago"
+}</pre>
+                <div style="border-top: 1px solid #333; padding: 15px; text-align: center;">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem;">Integrado con Prometheus &
+                        Grafana</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sdks">
+        <span class="section-tag">Unified Ecosystem</span>
+        <h2>SDK Tabs: Build Everywhere</h2>
+        <div class="sdk-center">
+            <div class="sdk-tabs">
+                <div class="sdk-tab active" onclick="setSdk('python')">Python</div>
+                <div class="sdk-tab" onclick="setSdk('go')">Go</div>
+                <div class="sdk-tab" onclick="setSdk('rust')">Rust</div>
+                <div class="sdk-tab" onclick="setSdk('ts')">JS/TS</div>
+            </div>
+            <div class="code-window" id="code-content">
+                <pre style="margin:0;"><code style="color: var(--accent-purple);"># CLI usage
+from derainedb import DeraineClient
+
+client = DeraineClient(host="localhost", port=50051)
+# Search with 64-bit categorical filter
+results = client.search(
+    query=[1.1, 2.2, 3.3, 4.4],
+    k=3,
+    mask=0x01
+)</code></pre>
+            </div>
         </div>
     </section>
 
     <footer>
-        <p>Built with Zig & Go | Licensed under Apache-2.0</p>
+        <p style="font-weight: 800; font-size: 1.5rem; margin-bottom: 2rem;">DeraineDB <span
+                style="font-weight: 300; color: #8b949e;">v2.0-stable</span></p>
+        <p style="color: var(--text-secondary);">Ricardo Bonilla Prada | Echo en Colombia para el mundo.</p>
+        <p style="font-size: 0.8rem; color: #444; margin-top: 2rem;">Licensed under Apache-2.0 | Zig 0.13.0 & Go 1.25.4
+            Compatible</p>
     </footer>
+
+    <script>
+        const sdkSnippets = {
+            python: `<pre style="margin:0;"><code style="color: var(--accent-purple);"># Python SDK (AI/ML workflows)
+from derainedb import DeraineClient
+
+client = DeraineClient(host="localhost", port=50051)
+results = client.search(
+    query=[1.0, 2.0, 3.0, 4.0],
+    k=3,
+    mask=0x01 # Images Category
+)</code></pre>`,
+            go: `<pre style="margin:0;"><code style="color: var(--accent-blue);">// Go SDK (Native Orchestration)
+import "github.com/ricardo/deraine-db/sdk/go"
+
+client, _ := derainedb.NewClient("localhost:50051")
+results, _ := client.SearchKNN(ctx, 
+    []float32{1.0, 2.0, 3.0, 4.0}, 
+    3, 
+    0x01
+)</code></pre>`,
+            rust: `<pre style="margin:0;"><code style="color: var(--accent-green);">// Rust SDK (Zero-Cost Performance)
+let mut client = Client::connect("localhost:50051").await?;
+let results = client.search(
+    vec![1.0, 2.0, 3.0, 4.0],
+    3,
+    0x01
+).await?;</code></pre>`,
+            ts: `<pre style="margin:0;"><code style="color: var(--accent-blue);">// JS/TS SDK (Fullstack/Web)
+const client = new DeraineClient("localhost:50051");
+const results = await client.search(
+    [1.0, 2.0, 3.0, 4.0],
+    3,
+    0x01
+);</code></pre>`
+        };
+
+        function setSdk(lang) {
+            document.querySelectorAll('.sdk-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('code-content').innerHTML = sdkSnippets[lang];
+        }
+    </script>
 </body>
 
 </html>

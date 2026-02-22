@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	derainedb "github.com/ricardo/deraine-db/sdk/go"
+	derainedb "github.com/RikardoBonilla/DeraineDB/sdk/go"
 )
 
 func main() {

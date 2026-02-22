@@ -19,13 +19,13 @@ class DeraineClient:
         self.channel = grpc.insecure_channel(f"{host}:{port}")
         self.stub = deraine_pb2_grpc.DeraineServiceStub(self.channel)
 
-    def write(self, id: int, data: List[float], mask: int = 0) -> bool:
+    def write(self, id: int, data: List[float], metadata_mask: int = 0) -> bool:
         """Writes a vector to the engine with a 64-bit metadata mask."""
         try:
             request = deraine_pb2.WriteVectorRequest(
                 id=id,
                 data=data,
-                metadata_mask=mask
+                metadata_mask=metadata_mask
             )
             self.stub.WriteVector(request)
             return True
@@ -33,19 +33,18 @@ class DeraineClient:
             print(f"Write error: {e}")
             return False
 
-    def search(self, query: List[float], k: int = 3, mask: int = 0) -> List[dict]:
+    def search(self, query: List[float], k: int = 3, filter_mask: int = 0) -> List[dict]:
         """Performs a K-Nearest Neighbors search with high-impact metadata filtering."""
         start_time = time.time()
         try:
             request = deraine_pb2.SearchKNNRequest(
                 query=query,
                 k=k,
-                filter_mask=mask
+                filter_mask=filter_mask
             )
             response = self.stub.SearchKNN(request)
             end_time = time.time()
             
-            # Encapsulate results for better DX
             results = []
             for m in response.matches:
                 results.append({

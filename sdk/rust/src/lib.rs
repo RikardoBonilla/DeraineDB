@@ -18,21 +18,21 @@ impl Client {
         })
     }
 
-    pub async fn write(&mut self, id: u64, data: Vec<f32>, mask: u64) -> Result<(), tonic::Status> {
+    pub async fn write(&mut self, id: u64, data: Vec<f32>, metadata_mask: u64) -> Result<(), tonic::Status> {
         let request = Request::new(WriteVectorRequest {
             id,
             data,
-            metadata_mask: mask,
+            metadata_mask,
         });
         self.inner.write_vector(request).await?;
         Ok(())
     }
 
-    pub async fn search(&mut self, query: Vec<f32>, k: u32, mask: u64) -> Result<Vec<deraine_pb::SearchMatch>, tonic::Status> {
+    pub async fn search(&mut self, query: Vec<f32>, k: u32, filter_mask: u64) -> Result<Vec<deraine_pb::SearchMatch>, tonic::Status> {
         let request = Request::new(SearchKnnRequest {
             query,
             k,
-            filter_mask: mask,
+            filter_mask,
         });
         let response = self.inner.search_knn(request).await?;
         Ok(response.into_inner().matches)

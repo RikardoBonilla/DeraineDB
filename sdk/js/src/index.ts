@@ -12,11 +12,11 @@ export class DeraineClient {
         );
     }
 
-    public async write(id: number, data: number[], mask: number): Promise<void> {
+    public async write(id: number, data: number[], metadata_mask: number): Promise<void> {
         const req = new WriteVectorRequest();
         req.setId(id);
         req.setDataList(data);
-        req.setMetadataMask(mask);
+        req.setMetadataMask(metadata_mask);
 
         return new Promise((resolve, reject) => {
             this.client.writeVector(req, (err) => {
@@ -26,11 +26,11 @@ export class DeraineClient {
         });
     }
 
-    public async search(query: number[], k: number, mask: number): Promise<any[]> {
+    public async search(query: number[], k: number, filter_mask: number): Promise<any[]> {
         const req = new SearchKNNRequest();
         req.setQueryList(query);
         req.setK(k);
-        req.setFilterMask(mask);
+        req.setFilterMask(filter_mask);
 
         return new Promise((resolve, reject) => {
             this.client.searchKNN(req, (err, response) => {

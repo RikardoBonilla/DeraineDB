@@ -43,20 +43,20 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) WriteVector(ctx context.Context, id uint64, data []float32, mask uint64) error {
+func (c *Client) WriteVector(ctx context.Context, id uint64, data []float32, metadata_mask uint64) error {
 	_, err := c.client.WriteVector(ctx, &pb.WriteVectorRequest{
 		Id:           id,
 		Data:         data,
-		MetadataMask: mask,
+		MetadataMask: metadata_mask,
 	})
 	return err
 }
 
-func (c *Client) SearchKNN(ctx context.Context, query []float32, k int, mask uint64) ([]SearchMatch, error) {
+func (c *Client) SearchKNN(ctx context.Context, query []float32, k int, filter_mask uint64) ([]SearchMatch, error) {
 	res, err := c.client.SearchKNN(ctx, &pb.SearchKNNRequest{
 		QueryVector: query,
 		K:           uint32(k),
-		FilterMask:  mask,
+		FilterMask:  filter_mask,
 	})
 	if err != nil {
 		return nil, err
