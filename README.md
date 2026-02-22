@@ -34,15 +34,16 @@ Engineered for speed, DeraineDB (v2.0) leverages advanced indexing and hardware 
 
 ---
 
-## 🚀 Quick Start (Python)
+## 🚀 Quick Start
 
+### Python SDK
 ```python
+# Python SDK (v2.0.0)
 from derainedb import DeraineClient
 
-# Connect to DeraineDB (default :50051)
 client = DeraineClient(host="localhost", port=50051)
 
-# Ingest a vector with a categorical mask
+# Ingest with categorical mask
 client.write(id=1001, data=[1.1, 2.2, 3.3, 4.4], mask=0x01)
 
 # Search with filters
@@ -50,6 +51,56 @@ results = client.search(query=[1.0, 2.0, 3.0, 4.0], k=3, mask=0x01)
 
 for match in results:
     print(f"ID: {match['id']}, Score: {match['distance']}")
+```
+
+### Go SDK
+```go
+// Go SDK (v2.0.0)
+import "github.com/ricardo/deraine-db/sdk/go"
+
+client, _ := derainedb.NewClient("localhost:50051")
+defer client.Close()
+
+// Write
+ctx := context.Background()
+client.WriteVector(ctx, 1001, []float32{1.1, 2.2, 3.3, 4.4}, 0x01)
+
+// Search
+matches, _ := client.SearchKNN(ctx, []float32{1.0, 2.0, 3.0, 4.0}, 3, 0x01)
+
+for _, m := range matches {
+    fmt.Printf("ID: %d, Dist: %f\n", m.ID, m.Distance)
+}
+```
+
+### Rust SDK
+```rust
+// Rust SDK (v2.0.0)
+let mut client = Client::connect("http://localhost:50051".into()).await?;
+
+// Write
+client.write(1001, vec![1.1, 2.2, 3.3, 4.4], 0x01).await?;
+
+// Search
+let matches = client.search(vec![1.0, 2.0, 3.0, 4.0], 3, 0x01).await?;
+
+for m in matches {
+    println!("ID: {}, Dist: {}", m.id, m.distance);
+}
+```
+
+### JS/TS SDK
+```typescript
+// JS/TS SDK (v2.0.0)
+const client = new DeraineClient("localhost:50051");
+
+// Write
+await client.write(1001, [1.1, 2.2, 3.3, 4.4], 0x01);
+
+// Search
+const results = await client.search([1.0, 2.0, 3.0, 4.0], 3, 0x01);
+
+results.forEach(m => console.log(`ID: ${m.id}, Dist: ${m.distance}`));
 ```
 
 ---
