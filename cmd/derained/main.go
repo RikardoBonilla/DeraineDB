@@ -1,3 +1,5 @@
+// Package main implements the DeraineDB Orchestrator.
+// It bridges the Zig-based vector engine with a gRPC API, Prometheus metrics, and an Admin UI.
 package main
 
 /*

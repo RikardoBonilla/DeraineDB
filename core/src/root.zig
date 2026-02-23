@@ -1,6 +1,12 @@
+//! DeraineDB Core Engine (v2.0-stable)
+//! High-performance vector storage and retrieval engine.
+//! Bridges Zig's memory-mapped storage with C/Go/Python/Rust SDKs.
+
 const std = @import("std");
 pub const storage = @import("storage.zig");
 
+/// DeraineHeader represents the 64-byte file header for .drb files.
+/// Includes magic bytes, versioning, and structural metadata.
 pub const DeraineHeader = extern struct {
     magic: [8]u8,
     version: u32,
@@ -17,6 +23,8 @@ pub const DeraineHeader = extern struct {
     }
 };
 
+/// DeraineVector represents a 64-byte cache-aligned vector record.
+/// Contains the payload (SIMD-ready) and metadata (64-bit mask).
 pub const DeraineVector = extern struct {
     id: u64,
     dimensions: u32,
@@ -83,6 +91,8 @@ export fn deraine_version() i32 {
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
+/// Opens an existing DeraineDB archive or creates a new one at the given path.
+/// Returns an opaque pointer to the Storage handle or null on failure.
 export fn deraine_open_db(path: [*:0]const u8) ?*storage.Storage {
     const allocator = gpa.allocator();
     const path_slice = std.mem.span(path);
@@ -189,6 +199,8 @@ export fn deraine_delete_vector(storage_ptr: *storage.Storage, index: u64) i32 {
     return 0;
 }
 
+/// Performs a Nearest Neighbor search using either Flat (linear) or HNSW (graph) traversal.
+/// Returns the number of matches found or -1 on failure.
 export fn deraine_search(
     storage_ptr: *storage.Storage,
     query_ptr: [*]const f32,

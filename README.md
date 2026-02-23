@@ -2,7 +2,11 @@
   <img src="assets/logo.png" width="250" alt="DeraineDB Logo">
 </p>
 
-# DeraineDB
+# DeraineDB v2.0-stable
+
+[![CI Pipeline](https://github.com/RikardoBonilla/DeraineDB/actions/workflows/pipeline.yml/badge.svg)](https://github.com/RikardoBonilla/DeraineDB/actions)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/RikardoBonilla/DeraineDB/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **The 1.8MB Vector Engine that thinks in Microseconds.**
 
@@ -26,122 +30,55 @@ Engineered for speed, DeraineDB (v2.0) leverages advanced indexing and hardware 
 
 ---
 
-## 🏗️ Architecture
-- **64-byte Alignment:** Every vector is aligned to CPU cache lines to prevent bouncing and maximize throughput.
-- **Auto-Heal Recovery:** Automatic HNSW reconstruction if the index is out-of-sync or missing.
-- **Atomic Snapshots:** Point-in-time backups using exclusive RWLock and forced `msync`.
-- **Hybrid Stack:** Zig handles memory/math; Go handles gRPC, metrics, and API orchestration.
+## 🏗️ High-Level Architecture
+DeraineDB uses a decoupled "Engine + Orchestrator" model:
+
+1. **Zig Core (Engine):** Handles memory-mapped storage, HNSW graph navigation, and SIMD math. It is compiled as a static library (.a) with CGO compatibility.
+2. **Go Orchestrator:** Manages the gRPC server, Prometheus metrics, and Admin dashboard.
+3. **MMap Persistence:** Uses dual-file storage (Data `.drb` + Index `.dridx`) for atomic persistence and instant recovery.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
-### Python SDK
-```python
-# Python SDK (v2.0.0)
-from derainedb import DeraineClient
+### 📦 Run via Docker (Recommended)
+The fastest way to deploy DeraineDB in production:
 
-client = DeraineClient(host="localhost", port=50051)
-
-# Ingest with categorical mask
-client.write(id=1001, data=[1.1, 2.2, 3.3, 4.4], mask=0x01)
-
-# Search with filters
-results = client.search(query=[1.0, 2.0, 3.0, 4.0], k=3, mask=0x01)
-
-for match in results:
-    print(f"ID: {match['id']}, Score: {match['distance']}")
-```
-
-### Go SDK
-```go
-// Go SDK (v2.0.0)
-import "github.com/ricardo/deraine-db/sdk/go"
-
-client, _ := derainedb.NewClient("localhost:50051")
-defer client.Close()
-
-// Write
-ctx := context.Background()
-client.WriteVector(ctx, 1001, []float32{1.1, 2.2, 3.3, 4.4}, 0x01)
-
-// Search
-matches, _ := client.SearchKNN(ctx, []float32{1.0, 2.0, 3.0, 4.0}, 3, 0x01)
-
-for _, m := range matches {
-    fmt.Printf("ID: %d, Dist: %f\n", m.ID, m.Distance)
-}
-```
-
-### Rust SDK
-```rust
-// Rust SDK (v2.0.0)
-let mut client = Client::connect("http://localhost:50051".into()).await?;
-
-// Write
-client.write(1001, vec![1.1, 2.2, 3.3, 4.4], 0x01).await?;
-
-// Search
-let matches = client.search(vec![1.0, 2.0, 3.0, 4.0], 3, 0x01).await?;
-
-for m in matches {
-    println!("ID: {}, Dist: {}", m.id, m.distance);
-}
-```
-
-### JS/TS SDK
-```typescript
-// JS/TS SDK (v2.0.0)
-const client = new DeraineClient("localhost:50051");
-
-// Write
-await client.write(1001, [1.1, 2.2, 3.3, 4.4], 0x01);
-
-// Search
-const results = await client.search([1.0, 2.0, 3.0, 4.0], 3, 0x01);
-
-results.forEach(m => console.log(`ID: ${m.id}, Dist: ${m.distance}`));
-```
-
----
-
-## 🌐 Ecosystem & SDKs
-DeraineDB (v2.0.0) provides official high-performance clients for modern stacks:
-
-*   **[Go SDK](sdk/go):** Native orchestration with connection pooling.
-*   **[Python SDK](sdk/python):** AI-ready wrapper with latency instrumentation.
-*   **[Rust SDK](sdk/rust):** Zero-cost async client using `tonic`.
-*   **[JS/TS SDK](sdk/js):** Web and Node.js compatible (via gRPC).
-
-> [!TIP]
-> Check the **[Quickstart Comparison](docs/quickstart-comparison.md)** to see side-by-side examples.
-
----
-
-## 📚 Technical Documentation
-*   **[Installation Guide](docs/installation.md):** Deep-dive into building the core and orchestrator.
-*   **[Metadata Filtering](docs/metadata-filtering.md):** How the 64-bit hardware-first mask works.
-*   **[API Reference](docs/api-reference.md):** Complete gRPC method documentation.
-
----
-
-## 🛠️ Management & Monitoring
-DeraineDB includes built-in observability for production stability:
-
-*   **Admin UI:** Web dashboard at `http://localhost:9090/admin`.
-*   **Prometheus:** Live metrics at `http://localhost:9090/metrics`.
-*   **Grafana:** Reference dashboard available in `/grafana/dashboard.json`.
-
----
-
-## 🛠️ Build from Source
 ```bash
-# Compile everything (Zig + Go)
+# Pull and run using Docker Compose
+docker-compose up -d --build
+```
+*   **gRPC API:** `localhost:50051`
+*   **Admin Dashboard:** `http://localhost:9090/admin`
+*   **Metrics:** `http://localhost:9090/metrics`
+
+### 🛠️ Build from Source
+Requires **Zig 0.15.2** and **Go 1.25**.
+
+```bash
+# Compile native binary (ReleaseFast)
 make all
 
-# Run the server
+# Run server
 ./bin/deraine-db
 ```
+
+---
+
+## 🌐 Official SDKs (v2.0)
+DeraineDB provides high-performance clients for modern stacks:
+
+*   **[Python SDK](sdk/python):** AI-ready wrapper with latency instrumentation.
+*   **[Go SDK](sdk/go):** Native orchestration with connection pooling.
+*   **[Rust SDK](sdk/rust):** Zero-cost async client using `tonic`.
+*   **[JS/TS SDK](sdk/js):** Web and Node.js compatible.
+
+---
+
+## 📚 Technical Reference
+*   **[Installation Guide](docs/installation.md):** Deep-dive into specific compilation flags.
+*   **[Metadata Filtering](docs/metadata-filtering.md):** Implementing hardware-first categorical filters.
+*   **[Quickstart Comparison](docs/quickstart-comparison.md):** Side-by-side code examples for all languages.
 
 ---
 *Built passionately for the next generation of AI infrastructure.*
