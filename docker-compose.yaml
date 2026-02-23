@@ -1,0 +1,16 @@
+services:
+  deraine-db:
+    build: .
+    container_name: deraine-db
+    ports:
+      - "50051:50051" # gRPC
+      - "9090:9090" # Admin UI & Metrics
+    volumes:
+      - deraine-data:/app/data
+    environment:
+      - DERAINE_DB_PORT=50051
+      - DERAINE_DB_DATA_DIR=/app/data
+    restart: unless-stopped
+
+volumes:
+  deraine-data:

@@ -1,0 +1,25 @@
+# Build artifacts
+bin/
+core/zig-cache/
+core/zig-out/
+zig-cache/
+zig-out/
+
+# Local databases and logs
+*.drb
+*.dridx
+*.log
+logs/
+test_bridge.drb
+test_hnsw.drb
+test_hnsw.drb.dridx
+
+# Development tools and configs
+.git/
+.github/
+.vscode/
+.agent/
+.DS_Store
+
+# Go dependencies (will be fetched in Docker)
+vendor/

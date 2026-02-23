@@ -145,3 +145,4 @@ make all
 
 ---
 *Built passionately for the next generation of AI infrastructure.*
+*Created by Ricardo Andres Bonilla Prada - RKD "Echo en Colombia".*

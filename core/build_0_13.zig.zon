@@ -1,8 +1,7 @@
 .{
-    .name = .core,
+    .name = "core",
     .version = "2.0.0",
-    .fingerprint = 0x6b8d854f435516fd,
-    .minimum_zig_version = "0.14.0",
+    .minimum_zig_version = "0.13.0",
     .dependencies = .{},
     .paths = .{
         "build.zig",
