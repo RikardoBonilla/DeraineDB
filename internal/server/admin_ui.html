@@ -1,167 +1,393 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeraineDB | Admin Dashboard</title>
+    <title>DeraineDB | Centro de Control</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;400;700&display=swap"
+        rel="stylesheet">
     <style>
+        :root {
+            --bg-deep: #05070a;
+            --bg-card: rgba(22, 27, 34, 0.7);
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --border-color: rgba(240, 246, 252, 0.1);
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --glass-glow: radial-gradient(circle at top left, rgba(88, 166, 255, 0.1), transparent);
+        }
+
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #0f1115;
-            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            background-image: var(--glass-glow);
+            color: var(--text-primary);
             margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
+
         .container {
-            width: 90%;
-            max-width: 1000px;
-            margin-top: 50px;
+            width: 92%;
+            max-width: 1100px;
+            margin: 60px 0;
+            animation: fadeIn 0.8s ease-out;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #2a2d35;
-            padding-bottom: 20px;
+            align-items: flex-end;
+            margin-bottom: 50px;
         }
+
+        .logo-area h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(90deg, #fff, var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-area p {
+            color: var(--text-secondary);
+            margin: 5px 0 0 0;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
         .status-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        .healthy { background-color: #1b5e20; color: #a5d6a7; }
-        .error { background-color: #b71c1c; color: #ef9a9a; }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-        .card {
-            background-color: #1a1d23;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #2d3139;
-            text-align: center;
-        }
-        .card-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #4fc3f7;
-            margin: 10px 0;
-        }
-        .card-label {
-            color: #888;
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 8px 18px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-size: 0.8em;
+            box-shadow: 0 0 20px rgba(63, 185, 80, 0.15);
         }
-        .actions {
-            margin-top: 40px;
-            text-align: center;
+
+        /* Metrics Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
-        button {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
         }
-        button:hover { transform: scale(1.05); }
-        .graph-preview {
-            margin-top: 40px;
-            background-color: #1a1d23;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #2d3139;
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(88, 166, 255, 0.3);
         }
+
+        .card-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .card-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .card-explanation {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .card-explanation strong {
+            color: var(--accent-blue);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* HNSW Viz */
+        .viz-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .viz-header {
+            margin-bottom: 30px;
+        }
+
+        .viz-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+        }
+
+        .viz-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .layers-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px 0;
+        }
+
+        .layer-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .layer-label {
+            width: 80px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .layer-bar-wrapper {
+            flex-grow: 1;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
         .layer-bar {
-            height: 20px;
-            background: #0288d1;
-            margin: 5px 0;
-            border-radius: 4px;
-            transition: width 0.5s;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), #0288d1);
+            border-radius: 10px;
+            width: 0;
+            transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: var(--bg-deep);
+            border: none;
+            padding: 16px 36px;
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            background: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(88, 166, 255, 0.2);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Tooltip-like hints */
+        .hint {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 10px;
+            margin-left: 5px;
+            cursor: help;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
-            <div>
-                <h1 style="margin: 0; color: #4fc3f7;">DeraineDB <span style="font-weight: 300; font-size: 0.6em; color: #888;">Admin</span></h1>
-                <p style="margin: 5px 0; color: #888;">Hardware-First Vector Intelligence (v2.0)</p>
+            <div class="logo-area">
+                <h1>DeraineDB <span>Admin</span></h1>
+                <p>Inteligencia Vectorial de Siguiente Generación</p>
             </div>
-            <div id="health" class="status-badge healthy">SYSTEM HEALTHY</div>
+            <div id="health" class="status-badge">SISTEMA SALUDABLE</div>
         </header>
 
         <div class="grid">
             <div class="card">
-                <div class="card-label">Stored Vectors</div>
+                <span class="card-label">Memoria de Datos</span>
                 <div id="vector_count" class="card-value">0</div>
+                <div class="card-explanation">
+                    <strong>¿Qué es esto?</strong>
+                    Representa el número total de "conceptos" o vectores que la base de datos ha aprendido y puede
+                    buscar instantáneamente.
+                </div>
             </div>
+
             <div class="card">
-                <div class="card-label">HNSW Max Level</div>
+                <span class="card-label">Nivel de Inteligencia</span>
                 <div id="max_level" class="card-value">-1</div>
+                <div class="card-explanation">
+                    <strong>Estructura HNSW</strong>
+                    Mide la profundidad del índice. A mayor nivel, más "atajos" crea el motor para encontrar respuestas
+                    en milisegundos.
+                </div>
             </div>
+
             <div class="card">
-                <div class="card-label">Allocated Memory</div>
-                <div id="memory" class="card-value">--</div>
+                <span class="card-label">Estado de Red</span>
+                <div id="health_status" class="card-value">OK</div>
+                <div class="card-explanation">
+                    <strong>Punto de Control</strong>
+                    Indica que el puente entre el motor de ultra-alto rendimiento (Zig) y el servidor (Go) está
+                    sincronizado.
+                </div>
             </div>
         </div>
 
-        <div class="graph-preview">
-            <h3>HNSW Hierarchy Visualization</h3>
-            <div id="layers">
-                <!-- Layers will be populated here -->
+        <div class="viz-section">
+            <div class="viz-header">
+                <h3>Mapa de Conexiones Neuronal (HNSW)</h3>
+                <p>DeraineDB no busca uno por uno. Organiza los datos en capas jerárquicas. Las capas superiores saltan
+                    grandes distancias, mientras que las inferiores afinan el resultado. Esto es lo que permite buscar
+                    en microsegundos.</p>
+            </div>
+            <div class="layers-container" id="layers">
+                <!-- Capas dinámicas -->
             </div>
         </div>
 
         <div class="actions">
-            <button onclick="triggerSnapshot()">Initiate Atomic Snapshot</button>
+            <button class="btn-primary" onclick="triggerSnapshot()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Crear Instantánea Atómica
+            </button>
         </div>
     </div>
 
     <script>
         async function updateStats() {
             try {
-                // In a real app, this would be an AJAX call to a Go endpoint
-                // For the MVP, we can simulate or use the GetEngineStatus data
-                // We will add a /api/health endpoint to Go for this.
                 const res = await fetch('/api/health');
                 const data = await res.json();
-                
-                document.getElementById('vector_count').innerText = data.vector_count;
-                document.getElementById('max_level').innerText = data.index_level;
-                
+
+                // Actualizar valores con animación simple
+                animateValue("vector_count", data.vector_count);
+                animateValue("max_level", data.index_level);
+
                 const layersDiv = document.getElementById('layers');
-                layersDiv.innerHTML = '';
-                for(let i=0; i <= data.index_level; i++) {
-                    const bar = document.createElement('div');
-                    bar.className = 'layer-bar';
-                    bar.style.width = Math.max(10, 100 - (i * 10)) + '%';
-                    bar.title = 'Layer ' + i;
-                    layersDiv.appendChild(bar);
+                const currentLayers = layersDiv.children.length;
+                const targetLayers = data.index_level + 1;
+
+                if (currentLayers !== targetLayers) {
+                    layersDiv.innerHTML = '';
+                    for (let i = 0; i <= data.index_level; i++) {
+                        const row = document.createElement('div');
+                        row.className = 'layer-row';
+                        row.innerHTML = `
+                            <div class="layer-label">NIVEL ${i}</div>
+                            <div class="layer-bar-wrapper">
+                                <div class="layer-bar" style="width: ${Math.max(5, 100 - (i * 15))}%"></div>
+                            </div>
+                        `;
+                        layersDiv.appendChild(row);
+                    }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("Error de actualización:", e);
+                document.getElementById('health').className = 'status-badge error';
+                document.getElementById('health').innerText = 'ERROR DE CONEXIÓN';
+            }
+        }
+
+        function animateValue(id, target) {
+            const el = document.getElementById(id);
+            el.innerText = target;
         }
 
         async function triggerSnapshot() {
-            if(!confirm('This will lock the engine briefly for an atomic point-in-time copy. Proceed?')) return;
+            const btn = document.querySelector('.btn-primary');
+            const originalText = btn.innerHTML;
+
+            if (!confirm('¿Deseas congelar el motor un instante para crear una copia de seguridad exacta (Snapshot)?')) return;
+
+            btn.innerText = "Procesando...";
+            btn.disabled = true;
+
             const res = await fetch('/api/snapshot', { method: 'POST' });
-            if(res.ok) alert('Snapshot Created Successfully!');
-            else alert('Snapshot Failed!');
+            if (res.ok) {
+                alert('¡Instantánea Atómica creada con éxito!');
+            } else {
+                alert('Error al crear la instantánea.');
+            }
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
 
         setInterval(updateStats, 2000);
         updateStats();
     </script>
 </body>
+
 </html>
