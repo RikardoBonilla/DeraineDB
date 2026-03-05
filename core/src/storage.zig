@@ -33,7 +33,7 @@ pub const Storage = struct {
         };
         errdefer file.close();
 
-        const initial_size = 64 * 1024;
+        const initial_size = 64 * 1024 * 1024;
         file.setEndPos(initial_size) catch return StorageError.TruncateError;
 
         const memory = std.posix.mmap(
@@ -49,7 +49,7 @@ pub const Storage = struct {
         header.* = .{
             .magic = "DERAINE\x00".*,
             .version = 1,
-            .vector_size = 64,
+            .vector_size = root.VECTOR_SIZE,
             .vector_count = 0,
             .data_start_offset = 4096,
             .reserved = [_]u8{0} ** 32,
@@ -228,7 +228,7 @@ pub const Storage = struct {
         self.index_header.max_level = -1;
 
         var i: u64 = 0;
-        const dim = 4;
+        const dim = root.VECTOR_DIMENSIONS;
         while (i < self.header.vector_count) : (i += 1) {
             const data = try self.readVectorInternal(i, dim);
             try self.insertVectorHNSWInternal(i, data);
@@ -237,12 +237,12 @@ pub const Storage = struct {
 
     fn readVectorInternal(self: *Storage, index: u64, dim: u32) ![]const f32 {
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
+        const vector_size = self.header.vector_size;
         const offset = header_size + (index * vector_size);
         const block = self.memory[offset .. offset + vector_size];
         const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
         if (meta.status == 0x01) return StorageError.VectorDeleted;
-        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
+        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
         return data_ptr[0..dim];
     }
 
@@ -331,12 +331,11 @@ pub const Storage = struct {
 
     fn getDistance(self: *Storage, query: []const f32, target_id: u64) !f32 {
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
+        const vector_size = self.header.vector_size;
         const offset = header_size + (target_id * vector_size);
         const block = self.memory[offset .. offset + vector_size];
-        const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
-        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
-        return euclideanDistanceSIMD(query, data_ptr[0..4]);
+        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
+        return euclideanDistanceSIMD(query, data_ptr[0..root.VECTOR_DIMENSIONS]);
     }
 
     pub fn insertVectorHNSW(self: *Storage, index: u64, query: []const f32) !void {
@@ -391,7 +390,7 @@ pub const Storage = struct {
         defer self.lock.unlock();
 
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
+        const vector_size = self.header.vector_size;
         const offset = header_size + (index * vector_size);
 
         if (offset + vector_size > self.memory.len) {
@@ -420,7 +419,7 @@ pub const Storage = struct {
         meta.metadata_mask = metadata_mask;
         meta.status = 0x00;
 
-        const data_dest = @as([*]f32, @ptrCast(@alignCast(&meta.padding[0])));
+        const data_dest = @as([*]f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
         @memcpy(data_dest[0..data.len], data);
 
         if (index >= self.header.vector_count) {
@@ -437,7 +436,7 @@ pub const Storage = struct {
         if (index >= self.header.vector_count) return StorageError.IndexOutOfBounds;
 
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
+        const vector_size = self.header.vector_size;
         const offset = header_size + (index * vector_size);
 
         const block = self.memory[offset .. offset + vector_size];
@@ -447,8 +446,8 @@ pub const Storage = struct {
             return StorageError.VectorDeleted;
         }
 
-        const dim = 4;
-        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
+        const dim = root.VECTOR_DIMENSIONS;
+        const data_ptr = @as([*]const f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
         return data_ptr[0..dim];
     }
 
@@ -459,7 +458,7 @@ pub const Storage = struct {
         if (index >= self.header.vector_count) return StorageError.IndexOutOfBounds;
 
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
+        const vector_size = self.header.vector_size;
         const offset = header_size + (index * vector_size);
 
         const block = self.memory[offset .. offset + vector_size];
@@ -531,7 +530,7 @@ pub const Storage = struct {
 
     fn getMetadataMask(self: *Storage, target_id: u64) u64 {
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
+        const vector_size = self.header.vector_size;
         const offset = header_size + (target_id * vector_size);
         const block = self.memory[offset .. offset + vector_size];
         const meta = @as(*root.DeraineVector, @ptrCast(@alignCast(block.ptr)));
@@ -571,8 +570,8 @@ pub const Storage = struct {
         defer self.lock.unlockShared();
 
         const header_size = @sizeOf(root.DeraineHeader);
-        const vector_size = 64;
-        const dim: usize = 4;
+        const vector_size = self.header.vector_size;
+        const dim: usize = root.VECTOR_DIMENSIONS;
 
         var count: usize = 0;
 
@@ -585,7 +584,7 @@ pub const Storage = struct {
 
             if (filter_mask != 0 and (meta.metadata_mask & filter_mask) == 0) continue;
 
-            const data_ptr = @as([*]const f32, @ptrCast(@alignCast(&meta.padding[0])));
+            const data_ptr = @as([*]const f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
             const dist = euclideanDistanceSIMD(query, data_ptr[0..dim]);
 
             if (count < k) {

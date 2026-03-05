@@ -32,16 +32,11 @@ func (s *DeraineServer) WriteVector(ctx context.Context, req *pb.WriteVectorRequ
 		return &pb.WriteVectorResponse{Success: false}, fmt.Errorf("vector data cannot be empty")
 	}
 
-	cData := make([]C.float, len(req.Data))
-	for i, v := range req.Data {
-		cData[i] = C.float(v)
-	}
-
 	res := C.deraine_write_vector(
 		s.dbHandle,
 		C.uint64_t(req.Id),
 		C.uint64_t(req.MetadataMask),
-		&cData[0],
+		(*C.float)(unsafe.Pointer(&req.Data[0])),
 		C.uint32_t(len(req.Data)),
 	)
 
@@ -57,11 +52,6 @@ func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest)
 		return &pb.SearchKNNResponse{}, fmt.Errorf("query vector cannot be empty")
 	}
 
-	cQuery := make([]C.float, len(req.QueryVector))
-	for i, v := range req.QueryVector {
-		cQuery[i] = C.float(v)
-	}
-
 	k := req.K
 	if k == 0 {
 		k = 3
@@ -72,13 +62,13 @@ func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest)
 
 	matches := C.deraine_search(
 		s.dbHandle,
-		&cQuery[0],
+		(*C.float)(unsafe.Pointer(&req.QueryVector[0])),
 		C.uint32_t(len(req.QueryVector)),
 		C.uint64_t(req.FilterMask),
 		C.uint32_t(k),
 		&outIds[0],
 		&outDists[0],
-		C.int32_t(req.Mode),
+		C.int32_t(1),
 	)
 
 	if matches < 0 {

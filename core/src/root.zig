@@ -5,6 +5,9 @@
 const std = @import("std");
 pub const storage = @import("storage.zig");
 
+pub const VECTOR_DIMENSIONS: u32 = 1536;
+pub const VECTOR_SIZE: u32 = @sizeOf(DeraineVector) + (VECTOR_DIMENSIONS * @sizeOf(f32));
+
 /// DeraineHeader represents the 64-byte file header for .drb files.
 /// Includes magic bytes, versioning, and structural metadata.
 pub const DeraineHeader = extern struct {
