@@ -1,0 +1,6 @@
+setup.py
+derainedb.egg-info/PKG-INFO
+derainedb.egg-info/SOURCES.txt
+derainedb.egg-info/dependency_links.txt
+derainedb.egg-info/requires.txt
+derainedb.egg-info/top_level.txt

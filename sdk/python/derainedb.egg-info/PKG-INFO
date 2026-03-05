@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: derainedb
+Version: 2.0.0
+Summary: Official Python SDK for DeraineDB Vector Engine
+Author: Ricardo Bonilla
+Requires-Python: >=3.8
+Requires-Dist: grpcio>=1.60.0
+Requires-Dist: protobuf>=4.25.0
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

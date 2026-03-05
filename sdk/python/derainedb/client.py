@@ -38,7 +38,7 @@ class DeraineClient:
         start_time = time.time()
         try:
             request = deraine_pb2.SearchKNNRequest(
-                query=query,
+                query_vector=query,
                 k=k,
                 filter_mask=filter_mask
             )
