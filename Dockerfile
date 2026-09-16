@@ -1,8 +1,8 @@
 # Header: DeraineDB Production Image v2.0-stable
 
 # --- Stage 1: Build Stage ---
-# Using golang:1.25-alpine to match go.mod compliance
-FROM golang:1.25-alpine AS builder
+# Using golang:1.26-alpine to match go.mod compliance
+FROM golang:1.26-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache \
@@ -62,6 +62,9 @@ VOLUME /app/data
 # Environment variables
 ENV DERAINE_DB_DATA_DIR=/app/data
 ENV DERAINE_DB_PORT=50051
+# Set DERAINE_DB_API_KEY explicitly (e.g. via `docker run -e` or your
+# orchestrator's secrets) to keep a stable key across restarts. If left
+# unset, the server generates a random one on each start and prints it once.
 
 # Expose gRPC and Metrics/Admin ports
 EXPOSE 50051 9090

@@ -11,6 +11,8 @@ package main
 import "C"
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -35,6 +37,24 @@ func getEnvOrDefault(key, fallback string) string {
 	return fallback
 }
 
+// resolveAPIKey returns the configured DERAINE_DB_API_KEY, or generates and
+// prints a random one so the server never runs wide open, even without any
+// extra configuration.
+func resolveAPIKey() string {
+	if key := os.Getenv("DERAINE_DB_API_KEY"); key != "" {
+		return key
+	}
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		log.Fatalf("failed to generate API key: %v", err)
+	}
+	key := hex.EncodeToString(buf)
+	fmt.Println("⚠️  DERAINE_DB_API_KEY not set. Generated a temporary key for this run:")
+	fmt.Printf("   %s\n", key)
+	fmt.Println("   Set DERAINE_DB_API_KEY to keep a stable key across restarts.")
+	return key
+}
+
 func main() {
 	fmt.Println("DeraineDB v2.0 - Sprint 11: Persistence & High Availability (Snapshots & Recovery)")
 
@@ -53,6 +73,8 @@ func main() {
 		return
 	}
 	defer C.deraine_close_db(handle)
+
+	apiKey := resolveAPIKey()
 
 	// --- Task 11.3: Crash Recovery (Auto-Heal) ---
 	var status C.deraine_status_t
@@ -77,10 +99,10 @@ func main() {
 		// 1. Prometheus Metrics
 		reg := prometheus.NewRegistry()
 		reg.MustRegister(server.NewDeraineCollector(handle))
-		mux.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+		mux.Handle("/metrics", server.RequireAPIKey(apiKey, promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP))
 
 		// 2. Admin UI
-		mux.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/admin", server.RequireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
 			tpl, err := os.ReadFile("internal/server/admin_ui.html")
 			if err != nil {
 				http.Error(w, "Admin UI template not found", http.StatusInternalServerError)
@@ -88,18 +110,18 @@ func main() {
 			}
 			w.Header().Set("Content-Type", "text/html")
 			w.Write(tpl)
-		})
+		}))
 
 		// 3. API for UI Polling
-		mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/api/health", server.RequireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
 			var status C.deraine_status_t
 			C.deraine_get_status(handle, &status)
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprintf(w, `{"healthy": %v, "vector_count": %d, "index_level": %d}`,
 				status.healthy != 0, status.vector_count, status.max_level)
-		})
+		}))
 
-		mux.HandleFunc("/api/snapshot", func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc("/api/snapshot", server.RequireAPIKey(apiKey, func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodPost {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 				return
@@ -112,7 +134,7 @@ func main() {
 			} else {
 				w.WriteHeader(http.StatusInternalServerError)
 			}
-		})
+		}))
 
 		fmt.Println("📊 Observability Server (Metrics & Admin) running on :9090")
 		if err := http.ListenAndServe(":9090", mux); err != nil {
@@ -126,7 +148,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(server.NewAPIKeyUnaryInterceptor(apiKey)),
+		grpc.StreamInterceptor(server.NewAPIKeyStreamInterceptor(apiKey)),
+	)
 	deraineServer := server.NewDeraineServer(handle)
 	pb.RegisterDeraineServiceServer(s, deraineServer)
 
