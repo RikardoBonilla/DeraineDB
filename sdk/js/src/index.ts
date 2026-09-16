@@ -4,12 +4,18 @@ import { WriteVectorRequest, SearchKNNRequest, GetEngineStatusRequest } from './
 
 export class DeraineClient {
     private client: DeraineServiceClient;
+    private metadata: grpc.Metadata;
 
-    constructor(address: string) {
+    // apiKey must match the server's DERAINE_DB_API_KEY.
+    constructor(address: string, apiKey?: string) {
         this.client = new DeraineServiceClient(
             address,
             grpc.credentials.createInsecure()
         );
+        this.metadata = new grpc.Metadata();
+        if (apiKey) {
+            this.metadata.set('x-api-key', apiKey);
+        }
     }
 
     public async write(id: number, data: number[], metadata_mask: number): Promise<void> {
@@ -19,7 +25,7 @@ export class DeraineClient {
         req.setMetadataMask(metadata_mask);
 
         return new Promise((resolve, reject) => {
-            this.client.writeVector(req, (err) => {
+            this.client.writeVector(req, this.metadata, (err) => {
                 if (err) reject(err);
                 else resolve();
             });
@@ -33,7 +39,7 @@ export class DeraineClient {
         req.setFilterMask(filter_mask);
 
         return new Promise((resolve, reject) => {
-            this.client.searchKNN(req, (err, response) => {
+            this.client.searchKNN(req, this.metadata, (err, response) => {
                 if (err) reject(err);
                 else resolve(response.getMatchesList().map(m => ({
                     id: m.getId(),

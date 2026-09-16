@@ -1,9 +1,10 @@
 from derainedb import DeraineClient
+import os
 import time
 
 def main():
-    # 1. Connect to DeraineDB
-    client = DeraineClient(host="localhost", port=50051)
+    # 1. Connect to DeraineDB (set DERAINE_DB_API_KEY to the server's key)
+    client = DeraineClient(host="localhost", port=50051, api_key=os.environ.get("DERAINE_DB_API_KEY"))
     
     # 2. Insert with metadata_mask (e.g. 0x01 for images)
     success = client.write(id=1001, data=[1.1, 2.2, 3.3, 4.4], metadata_mask=0x01)

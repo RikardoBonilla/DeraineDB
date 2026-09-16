@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	derainedb "github.com/RikardoBonilla/DeraineDB/sdk/go"
 )
 
 func main() {
-	// 1. Connect to DeraineDB
-	client, err := derainedb.NewClient("localhost:50051")
+	// 1. Connect to DeraineDB (set DERAINE_DB_API_KEY to the server's key)
+	apiKey := os.Getenv("DERAINE_DB_API_KEY")
+	client, err := derainedb.NewClient("localhost:50051", apiKey)
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)
 	}

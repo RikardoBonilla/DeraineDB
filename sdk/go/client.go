@@ -7,6 +7,7 @@ import (
 	pb "github.com/ricardo/deraine-db/api/grpc/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 const Version = "2.0.0"
@@ -19,24 +20,34 @@ type SearchMatch struct {
 type Client struct {
 	conn   *grpc.ClientConn
 	client pb.DeraineServiceClient
+	apiKey string
 }
 
-func NewClient(addr string) (*Client, error) {
+// NewClient connects to a DeraineDB server at addr, authenticating every
+// call with apiKey (must match the server's DERAINE_DB_API_KEY).
+func NewClient(addr string, apiKey string) (*Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	c := &Client{apiKey: apiKey}
 
 	conn, err := grpc.DialContext(ctx, addr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
+		grpc.WithUnaryInterceptor(c.authUnaryInterceptor),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{
-		conn:   conn,
-		client: pb.NewDeraineServiceClient(conn),
-	}, nil
+	c.conn = conn
+	c.client = pb.NewDeraineServiceClient(conn)
+	return c, nil
+}
+
+func (c *Client) authUnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	ctx = metadata.AppendToOutgoingContext(ctx, "x-api-key", c.apiKey)
+	return invoker(ctx, method, req, reply, cc, opts...)
 }
 
 func (c *Client) Close() error {

@@ -15,9 +15,11 @@ class DeraineClient:
     
     VERSION = "2.0.0"
 
-    def __init__(self, host: str = "localhost", port: int = 50051):
+    def __init__(self, host: str = "localhost", port: int = 50051, api_key: Optional[str] = None):
         self.channel = grpc.insecure_channel(f"{host}:{port}")
         self.stub = deraine_pb2_grpc.DeraineServiceStub(self.channel)
+        # Must match the server's DERAINE_DB_API_KEY.
+        self._metadata = [("x-api-key", api_key)] if api_key else []
 
     def write(self, id: int, data: List[float], metadata_mask: int = 0) -> bool:
         """Writes a vector to the engine with a 64-bit metadata mask."""
@@ -27,7 +29,7 @@ class DeraineClient:
                 data=data,
                 metadata_mask=metadata_mask
             )
-            self.stub.WriteVector(request)
+            self.stub.WriteVector(request, metadata=self._metadata)
             return True
         except grpc.RpcError as e:
             print(f"Write error: {e}")
@@ -42,9 +44,9 @@ class DeraineClient:
                 k=k,
                 filter_mask=filter_mask
             )
-            response = self.stub.SearchKNN(request)
+            response = self.stub.SearchKNN(request, metadata=self._metadata)
             end_time = time.time()
-            
+
             results = []
             for m in response.matches:
                 results.append({
@@ -60,7 +62,7 @@ class DeraineClient:
     def get_status(self) -> dict:
         """Retrieves real-time engine health and stats."""
         try:
-            response = self.stub.GetEngineStatus(deraine_pb2.GetEngineStatusRequest())
+            response = self.stub.GetEngineStatus(deraine_pb2.GetEngineStatusRequest(), metadata=self._metadata)
             return {
                 "healthy": response.healthy,
                 "version": response.version,

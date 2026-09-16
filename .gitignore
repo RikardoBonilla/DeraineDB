@@ -50,3 +50,4 @@ go.work.sum
 *.log
 backup_sprint11*
 test_hnsw*
+sdk/rust/target/

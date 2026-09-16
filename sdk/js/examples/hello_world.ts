@@ -1,8 +1,8 @@
 import { DeraineClient } from '../src';
 
 async function main() {
-    // 1. Connect to DeraineDB
-    const client = new DeraineClient("localhost:50051");
+    // 1. Connect to DeraineDB (set DERAINE_DB_API_KEY to the server's key)
+    const client = new DeraineClient("localhost:50051", process.env.DERAINE_DB_API_KEY);
     console.log("🚀 Connected to DeraineDB");
 
     try {
