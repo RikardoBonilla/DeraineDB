@@ -16,6 +16,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 	"unsafe"
 
@@ -27,10 +28,23 @@ import (
 	"github.com/ricardo/deraine-db/internal/server"
 )
 
+func getEnvOrDefault(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
 func main() {
 	fmt.Println("DeraineDB v2.0 - Sprint 11: Persistence & High Availability (Snapshots & Recovery)")
 
-	dbPath := C.CString("test_hnsw.drb")
+	dataDir := getEnvOrDefault("DERAINE_DB_DATA_DIR", ".")
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		fmt.Printf("❌ Critical Error: could not create data directory %s: %v\n", dataDir, err)
+		return
+	}
+
+	dbPath := C.CString(filepath.Join(dataDir, "derained.drb"))
 	defer C.free(unsafe.Pointer(dbPath))
 
 	handle := C.deraine_open_db(dbPath)
@@ -90,7 +104,8 @@ func main() {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 				return
 			}
-			path := C.CString("web_backup_" + fmt.Sprintf("%d", time.Now().Unix()))
+			snapshotName := fmt.Sprintf("web_backup_%d", time.Now().Unix())
+			path := C.CString(filepath.Join(dataDir, snapshotName))
 			defer C.free(unsafe.Pointer(path))
 			if C.deraine_create_snapshot(handle, path) == 0 {
 				w.WriteHeader(http.StatusOK)
@@ -106,7 +121,8 @@ func main() {
 	}()
 
 	// Start gRPC Server
-	lis, err := net.Listen("tcp", ":50051")
+	grpcPort := getEnvOrDefault("DERAINE_DB_PORT", "50051")
+	lis, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -114,7 +130,7 @@ func main() {
 	deraineServer := server.NewDeraineServer(handle)
 	pb.RegisterDeraineServiceServer(s, deraineServer)
 
-	fmt.Println("🚀 DeraineDB gRPC Server with HNSW support running on :50051")
+	fmt.Printf("🚀 DeraineDB gRPC Server with HNSW support running on :%s\n", grpcPort)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
