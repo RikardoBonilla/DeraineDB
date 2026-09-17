@@ -326,9 +326,11 @@
     </div>
 
     <script>
+        const API_KEY = window.__DERAINE_API_KEY || '';
+
         async function updateStats() {
             try {
-                const res = await fetch('/api/health');
+                const res = await fetch('/api/health?api_key=' + encodeURIComponent(API_KEY));
                 const data = await res.json();
 
                 // Actualizar valores con animación simple
@@ -374,7 +376,7 @@
             btn.innerText = "Procesando...";
             btn.disabled = true;
 
-            const res = await fetch('/api/snapshot', { method: 'POST' });
+            const res = await fetch('/api/snapshot?api_key=' + encodeURIComponent(API_KEY), { method: 'POST' });
             if (res.ok) {
                 alert('¡Instantánea Atómica creada con éxito!');
             } else {

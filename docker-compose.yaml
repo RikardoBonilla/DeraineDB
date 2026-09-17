@@ -10,6 +10,10 @@ services:
     environment:
       - DERAINE_DB_PORT=50051
       - DERAINE_DB_DATA_DIR=/app/data
+      # Set a stable key here (or via an .env file / secrets manager) - if
+      # left unset, restart: unless-stopped will silently rotate the key
+      # on every restart, since the server generates a new random one.
+      - DERAINE_DB_API_KEY=change-me
     restart: unless-stopped
 
 volumes:

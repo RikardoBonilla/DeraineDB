@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -105,8 +106,14 @@ func main() {
 				http.Error(w, "Admin UI template not found", http.StatusInternalServerError)
 				return
 			}
+			// The page's own JS calls /api/health and /api/snapshot, which are
+			// also behind RequireAPIKey, so it needs the key it was just
+			// loaded with (as ?api_key=... in the URL) to keep calling them.
+			escapedKey := strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(apiKey)
+			injected := strings.Replace(string(tpl), "</head>",
+				fmt.Sprintf("<script>window.__DERAINE_API_KEY = \"%s\";</script></head>", escapedKey), 1)
 			w.Header().Set("Content-Type", "text/html")
-			w.Write(tpl)
+			w.Write([]byte(injected))
 		}))
 
 		// 3. API for UI Polling
