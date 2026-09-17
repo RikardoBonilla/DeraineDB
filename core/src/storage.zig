@@ -429,7 +429,13 @@ pub const Storage = struct {
         try self.insertVectorHNSW(index, data);
     }
 
-    pub fn readVector(self: *Storage, index: u64) ![]const f32 {
+    /// Copies the vector at `index` into `out` while the shared lock is held
+    /// ("Safe-Copy"). A concurrent writeVector can trigger resize(), which
+    /// munmaps and remaps self.memory; a pointer into that memory returned
+    /// after the lock is released would dangle the instant that happens, so
+    /// the copy must happen in this locked scope, not in the caller.
+    /// Returns the number of floats copied.
+    pub fn readVector(self: *Storage, index: u64, out: []f32) !usize {
         self.lock.lockShared();
         defer self.lock.unlockShared();
 
@@ -448,7 +454,9 @@ pub const Storage = struct {
 
         const dim = root.VECTOR_DIMENSIONS;
         const data_ptr = @as([*]const f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
-        return data_ptr[0..dim];
+        const copy_len = @min(out.len, dim);
+        @memcpy(out[0..copy_len], data_ptr[0..copy_len]);
+        return copy_len;
     }
 
     pub fn deleteVector(self: *Storage, index: u64) !void {

@@ -185,17 +185,14 @@ export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, metada
 }
 
 export fn deraine_read_vector(storage_ptr: *storage.Storage, index: u64, out_data: [*]f32, out_len: u32) i32 {
-    if (storage_ptr.readVector(index)) |data_slice| {
-        const copy_len = @min(out_len, @as(u32, @intCast(data_slice.len)));
-        @memcpy(out_data[0..copy_len], data_slice[0..copy_len]);
-        return 0;
-    } else |err| {
+    _ = storage_ptr.readVector(index, out_data[0..out_len]) catch |err| {
         return switch (err) {
             storage.StorageError.VectorDeleted => -2,
             storage.StorageError.IndexOutOfBounds => -3,
             else => -1,
         };
-    }
+    };
+    return 0;
 }
 
 export fn deraine_delete_vector(storage_ptr: *storage.Storage, index: u64) i32 {
