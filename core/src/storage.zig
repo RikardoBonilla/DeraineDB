@@ -232,7 +232,7 @@ pub const Storage = struct {
         const dim = root.VECTOR_DIMENSIONS;
         while (i < self.header.vector_count) : (i += 1) {
             const data = try self.readVectorInternal(i, dim);
-            try self.insertVectorHNSWInternal(i, data);
+            try self.insertVectorHNSW(i, data);
         }
     }
 
@@ -247,40 +247,6 @@ pub const Storage = struct {
         return data_ptr[0..dim];
     }
 
-    fn insertVectorHNSWInternal(self: *Storage, index: u64, query: []const f32) !void {
-        const level = getRandomLevel();
-        const node = self.getIndexNode(index);
-        node.max_level = level;
-        for (0..root.HNSW_MAX_LEVEL) |l| {
-            node.layers[l].neighbor_count = 0;
-        }
-
-        if (self.index_header.max_level == -1) {
-            self.index_header.entry_point_id = index;
-            self.index_header.max_level = level;
-            return;
-        }
-
-        var current_entry = self.index_header.entry_point_id;
-        const current_max_level = self.index_header.max_level;
-
-        var l = current_max_level;
-        while (l > level) : (l -= 1) {
-            current_entry = self.searchLayer(query, current_entry, l, 0);
-        }
-
-        l = @min(level, current_max_level);
-        while (l >= 0) : (l -= 1) {
-            current_entry = self.searchLayer(query, current_entry, l, 0);
-            const target_node = self.getIndexNode(current_entry);
-            const target_adj = &target_node.layers[@as(usize, @intCast(l))];
-            if (target_adj.neighbor_count < root.HNSW_M) {
-                target_adj.neighbors[target_adj.neighbor_count] = index;
-                target_adj.neighbor_count += 1;
-            }
-        }
-    }
-
     fn getIndexNode(self: *Storage, index: u64) *root.IndexNode {
         const header_size = @sizeOf(root.IndexHeader);
         const node_size = @sizeOf(root.IndexNode);
@@ -289,18 +255,23 @@ pub const Storage = struct {
         return @as(*root.IndexNode, @ptrCast(@alignCast(&self.index_memory[offset])));
     }
 
+    /// Uses the process-wide CSPRNG instead of reseeding a PRNG from the
+    /// millisecond clock on every call. Insertions happen faster than 1ms
+    /// apart under any real load, so the old code handed out identical
+    /// "random" sequences to many consecutive inserts, correlating the
+    /// level assignment and breaking HNSW's expected level distribution.
     fn getRandomLevel() i32 {
-        var prng = std.Random.DefaultPrng.init(@as(u64, @intCast(std.time.milliTimestamp())));
-        const random = prng.random();
-
         var level: i32 = 0;
         const p: f32 = 0.5;
-        while (random.float(f32) < p and level < root.HNSW_MAX_LEVEL - 1) {
+        while (std.crypto.random.float(f32) < p and level < root.HNSW_MAX_LEVEL - 1) {
             level += 1;
         }
         return level;
     }
 
+    /// Single-best greedy descent, used only to find an entry point when
+    /// tunneling through upper layers where the new node won't get any
+    /// edges (standard HNSW behavior - ef=1 is intentional there).
     fn searchLayer(self: *Storage, query: []const f32, entry_id: u64, layer: i32, filter_mask: u64) u64 {
         var current_id = entry_id;
         var current_dist = self.getDistance(query, current_id) catch 999999.0;
@@ -330,6 +301,132 @@ pub const Storage = struct {
         return current_id;
     }
 
+    const Candidate = struct {
+        id: u64,
+        dist: f32,
+    };
+
+    // Bounds for the allocation-free beam search below. ef is always
+    // clamped to MAX_EF, so these arrays cover the worst case without
+    // needing a heap allocator in this hot path.
+    const MAX_EF: usize = 256;
+    const MAX_VISITED: usize = 4096;
+    const MAX_CANDIDATES: usize = 1024;
+
+    /// Real HNSW "SEARCH-LAYER": explores the graph from entry_id and
+    /// returns up to `ef` nearest candidates found (sorted closest-first),
+    /// instead of just the single greedy-best node. This is what lets
+    /// insertion connect a new node to several real neighbors instead of
+    /// one, and what lets queries recover from a mediocre single greedy
+    /// path by keeping a wider beam of options.
+    fn searchLayerCandidates(
+        self: *Storage,
+        query: []const f32,
+        entry_id: u64,
+        layer: i32,
+        ef: usize,
+        filter_mask: u64,
+        out_results: []Candidate,
+    ) usize {
+        const ef_clamped = @min(ef, MAX_EF);
+
+        var visited: [MAX_VISITED]u64 = undefined;
+        var visited_count: usize = 0;
+
+        var candidates: [MAX_CANDIDATES]Candidate = undefined;
+        var candidates_count: usize = 0;
+
+        var results: [MAX_EF]Candidate = undefined;
+        var results_count: usize = 0;
+
+        const entry_dist = self.getDistance(query, entry_id) catch 999999.0;
+        candidates[0] = .{ .id = entry_id, .dist = entry_dist };
+        candidates_count = 1;
+        visited[0] = entry_id;
+        visited_count = 1;
+        results[0] = .{ .id = entry_id, .dist = entry_dist };
+        results_count = 1;
+
+        while (candidates_count > 0) {
+            var min_idx: usize = 0;
+            for (1..candidates_count) |i| {
+                if (candidates[i].dist < candidates[min_idx].dist) min_idx = i;
+            }
+            const current = candidates[min_idx];
+            candidates[min_idx] = candidates[candidates_count - 1];
+            candidates_count -= 1;
+
+            if (results_count >= ef_clamped) {
+                var worst_idx: usize = 0;
+                for (1..results_count) |i| {
+                    if (results[i].dist > results[worst_idx].dist) worst_idx = i;
+                }
+                if (current.dist > results[worst_idx].dist) break;
+            }
+
+            const node = self.getIndexNode(current.id);
+            const adj = &node.layers[@as(usize, @intCast(layer))];
+
+            for (0..adj.neighbor_count) |i| {
+                const neighbor_id = adj.neighbors[i];
+
+                var already_visited = false;
+                for (0..visited_count) |v| {
+                    if (visited[v] == neighbor_id) {
+                        already_visited = true;
+                        break;
+                    }
+                }
+                if (already_visited) continue;
+                if (visited_count < visited.len) {
+                    visited[visited_count] = neighbor_id;
+                    visited_count += 1;
+                }
+
+                if (filter_mask != 0) {
+                    const m = self.getMetadataMask(neighbor_id);
+                    if ((m & filter_mask) == 0) continue;
+                }
+
+                const d = self.getDistance(query, neighbor_id) catch 999999.0;
+
+                var worst_idx: usize = 0;
+                for (1..results_count) |ri| {
+                    if (results[ri].dist > results[worst_idx].dist) worst_idx = ri;
+                }
+                const should_add = results_count < ef_clamped or d < results[worst_idx].dist;
+                if (!should_add) continue;
+
+                if (candidates_count < candidates.len) {
+                    candidates[candidates_count] = .{ .id = neighbor_id, .dist = d };
+                    candidates_count += 1;
+                }
+
+                if (results_count < ef_clamped) {
+                    results[results_count] = .{ .id = neighbor_id, .dist = d };
+                    results_count += 1;
+                } else {
+                    results[worst_idx] = .{ .id = neighbor_id, .dist = d };
+                }
+            }
+        }
+
+        // Small insertion sort: results_count <= ef_clamped <= MAX_EF (256).
+        var i: usize = 1;
+        while (i < results_count) : (i += 1) {
+            const key = results[i];
+            var j = i;
+            while (j > 0 and results[j - 1].dist > key.dist) : (j -= 1) {
+                results[j] = results[j - 1];
+            }
+            results[j] = key;
+        }
+
+        const n = @min(results_count, out_results.len);
+        for (0..n) |idx| out_results[idx] = results[idx];
+        return n;
+    }
+
     fn getDistance(self: *Storage, query: []const f32, target_id: u64) !f32 {
         const header_size = @sizeOf(root.DeraineHeader);
         const vector_size = self.header.vector_size;
@@ -337,6 +434,39 @@ pub const Storage = struct {
         const block = self.memory[offset .. offset + vector_size];
         const data_ptr = @as([*]const f32, @ptrCast(@alignCast(block.ptr + @sizeOf(root.DeraineVector))));
         return euclideanDistanceSIMD(query, data_ptr[0..root.VECTOR_DIMENSIONS]);
+    }
+
+    /// Bidirectionally links target_id -> new_id at `layer`, pruning the
+    /// target's weakest existing edge (from the target's own point of
+    /// view) if it's already at capacity. This is what the old code never
+    /// did: a node's neighbor list here can hold up to HNSW_M real
+    /// neighbors instead of exactly one.
+    fn addNeighborWithPruning(self: *Storage, target_id: u64, new_id: u64, layer: i32) void {
+        const target_node = self.getIndexNode(target_id);
+        const adj = &target_node.layers[@as(usize, @intCast(layer))];
+
+        if (adj.neighbor_count < root.HNSW_M) {
+            adj.neighbors[adj.neighbor_count] = new_id;
+            adj.neighbor_count += 1;
+            return;
+        }
+
+        const target_vec = self.readVectorInternal(target_id, root.VECTOR_DIMENSIONS) catch return;
+        const dist_new = self.getDistance(target_vec, new_id) catch return;
+
+        var worst_idx: usize = 0;
+        var worst_dist: f32 = -1;
+        for (0..adj.neighbor_count) |i| {
+            const d = self.getDistance(target_vec, adj.neighbors[i]) catch continue;
+            if (d > worst_dist) {
+                worst_dist = d;
+                worst_idx = i;
+            }
+        }
+
+        if (dist_new < worst_dist) {
+            adj.neighbors[worst_idx] = new_id;
+        }
     }
 
     pub fn insertVectorHNSW(self: *Storage, index: u64, query: []const f32) !void {
@@ -361,23 +491,25 @@ pub const Storage = struct {
         while (l > level) : (l -= 1) {
             current_entry = self.searchLayer(query, current_entry, l, 0);
         }
+
         l = @min(level, current_max_level);
-        while (l >= 0) : (l -= 1) {
-            current_entry = self.searchLayer(query, current_entry, l, 0);
+        while (true) {
+            var candidates: [MAX_EF]Candidate = undefined;
+            const found = self.searchLayerCandidates(query, current_entry, l, root.HNSW_EF_CONSTRUCTION, 0, &candidates);
 
-            const target_node = self.getIndexNode(current_entry);
-            const target_adj = &target_node.layers[@as(usize, @intCast(l))];
-
-            if (target_adj.neighbor_count < root.HNSW_M) {
-                target_adj.neighbors[target_adj.neighbor_count] = index;
-                target_adj.neighbor_count += 1;
+            const num_neighbors = @min(found, root.HNSW_M);
+            const my_adj = &node.layers[@as(usize, @intCast(l))];
+            my_adj.neighbor_count = 0;
+            for (0..num_neighbors) |i| {
+                my_adj.neighbors[my_adj.neighbor_count] = candidates[i].id;
+                my_adj.neighbor_count += 1;
+                self.addNeighborWithPruning(candidates[i].id, index, l);
             }
 
-            const my_adj = &node.layers[@as(usize, @intCast(l))];
-            my_adj.neighbors[0] = current_entry;
-            my_adj.neighbor_count = 1;
+            if (found > 0) current_entry = candidates[0].id;
 
             if (l == 0) break;
+            l -= 1;
         }
 
         if (level > current_max_level) {
@@ -508,30 +640,18 @@ pub const Storage = struct {
             current_entry = self.searchLayer(query, current_entry, l, 0);
         }
 
-        const final_id = self.searchLayer(query, current_entry, 0, filter_mask);
+        // Use a real beam of candidates at layer 0 instead of a single
+        // greedy-best node plus whatever happens to be in its direct
+        // neighbor list - that's what let searches get stuck far from
+        // the true nearest neighbors.
+        const ef_search = @max(@as(usize, @intCast(k)), root.HNSW_EF_CONSTRUCTION);
+        var results: [MAX_EF]Candidate = undefined;
+        const found = self.searchLayerCandidates(query, current_entry, 0, ef_search, filter_mask, &results);
 
-        const node = self.getIndexNode(final_id);
-        const adj = &node.layers[0];
-
-        var count: usize = 0;
-
-        const winner_mask = self.getMetadataMask(final_id);
-        if (filter_mask == 0 or (winner_mask & filter_mask) != 0) {
-            out_ids[0] = final_id;
-            out_distances[0] = try self.getDistance(query, final_id);
-            count = 1;
-        }
-
-        for (0..adj.neighbor_count) |i| {
-            if (count >= k) break;
-            const nid = adj.neighbors[i];
-
-            const m = self.getMetadataMask(nid);
-            if (filter_mask != 0 and (m & filter_mask) == 0) continue;
-
-            out_ids[count] = nid;
-            out_distances[count] = try self.getDistance(query, nid);
-            count += 1;
+        const count = @min(@as(usize, @intCast(k)), found);
+        for (0..count) |i| {
+            out_ids[i] = results[i].id;
+            out_distances[i] = results[i].dist;
         }
 
         return count;
