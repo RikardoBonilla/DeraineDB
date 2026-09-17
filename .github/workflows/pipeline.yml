@@ -33,7 +33,10 @@ jobs:
       run: make all
 
     - name: Zig Internal Tests
-      run: cd core && zig test src/root.zig
+      run: |
+        cd core
+        zig test src/root.zig
+        zig test src/test_storage.zig
 
     - name: Go Orchestrator Tests
       run: go test -v ./...

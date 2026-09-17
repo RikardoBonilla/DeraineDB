@@ -64,15 +64,12 @@ func main() {
 		return
 	}
 
-	dbPath := C.CString(filepath.Join(dataDir, "derained.drb"))
-	defer C.free(unsafe.Pointer(dbPath))
-
-	handle := C.deraine_open_db(dbPath)
-	if handle == nil {
-		fmt.Println("❌ Critical Error: Could not open/create DB.")
+	handle, err := server.OpenDB(filepath.Join(dataDir, "derained.drb"))
+	if err != nil {
+		fmt.Printf("❌ Critical Error: %v\n", err)
 		return
 	}
-	defer C.deraine_close_db(handle)
+	defer server.CloseDB(handle)
 
 	apiKey := resolveAPIKey()
 
