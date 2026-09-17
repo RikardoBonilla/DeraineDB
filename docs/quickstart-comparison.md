@@ -7,11 +7,12 @@ See how to perform a filtered K-Nearest Neighbors search across the DeraineDB ec
 # Python SDK (AI/ML workflows)
 from derainedb import DeraineClient
 
-client = DeraineClient(host="localhost", port=50051)
+# api_key must match the server's DERAINE_DB_API_KEY
+client = DeraineClient(host="localhost", port=50051, api_key="your-secret-key")
 results = client.search(
     query=[1.0, 2.0, 3.0, 4.0],
     k=3,
-    mask=0x01 # Images Category
+    filter_mask=0x01 # Images Category
 )
 
 for m in results:
@@ -20,9 +21,10 @@ for m in results:
 <!-- slide -->
 ```go
 // Go SDK (Native Orchestration)
-import "github.com/ricardo/deraine-db/sdk/go"
+import derainedb "github.com/RikardoBonilla/DeraineDB/sdk/go"
 
-client, _ := derainedb.NewClient("localhost:50051")
+// apiKey must match the server's DERAINE_DB_API_KEY
+client, _ := derainedb.NewClient("localhost:50051", apiKey)
 results, _ := client.SearchKNN(ctx, 
     []float32{1.0, 2.0, 3.0, 4.0}, 
     3, 
@@ -36,7 +38,8 @@ for _, m := range results {
 <!-- slide -->
 ```rust
 // Rust SDK (Zero-Cost Performance)
-let mut client = Client::connect("http://localhost:50051".into()).await?;
+// api_key must match the server's DERAINE_DB_API_KEY
+let mut client = Client::connect("http://localhost:50051".into(), api_key).await?;
 let results = client.search(
     vec![1.0, 2.0, 3.0, 4.0],
     3,
@@ -50,7 +53,8 @@ for m in results {
 <!-- slide -->
 ```typescript
 // JS/TS SDK (Fullstack/Web)
-const client = new DeraineClient("localhost:50051");
+// apiKey must match the server's DERAINE_DB_API_KEY
+const client = new DeraineClient("localhost:50051", apiKey);
 const results = await client.search(
     [1.0, 2.0, 3.0, 4.0],
     3,
