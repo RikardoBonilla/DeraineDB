@@ -165,7 +165,14 @@ export fn deraine_get_status(storage_ptr: *storage.Storage, out_status: *Deraine
     return 0;
 }
 
+/// Returns the fixed vector dimension the engine was built for, so callers
+/// (e.g. the Go server) can validate input length without hardcoding it.
+export fn deraine_get_vector_dimensions() u32 {
+    return VECTOR_DIMENSIONS;
+}
+
 export fn deraine_write_vector(storage_ptr: *storage.Storage, index: u64, metadata_mask: u64, data_ptr: [*]const f32, len: u32) i32 {
+    if (len != VECTOR_DIMENSIONS) return -4;
     const data = data_ptr[0..len];
 
     storage_ptr.writeVector(index, metadata_mask, data) catch |err| {
@@ -214,6 +221,7 @@ export fn deraine_search(
     out_distances: [*]f32,
     mode: i32,
 ) i32 {
+    if (query_len != VECTOR_DIMENSIONS) return -4;
     const query = query_ptr[0..query_len];
     const search_mode: SearchMode = @enumFromInt(mode);
 

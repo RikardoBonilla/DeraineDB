@@ -6,6 +6,8 @@ import (
 	"unsafe"
 
 	pb "github.com/ricardo/deraine-db/api/grpc/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 /*
@@ -18,18 +20,30 @@ import "C"
 
 type DeraineServer struct {
 	pb.UnimplementedDeraineServiceServer
-	dbHandle unsafe.Pointer
+	dbHandle   unsafe.Pointer
+	vectorDims uint32
 }
 
 func NewDeraineServer(handle unsafe.Pointer) *DeraineServer {
 	return &DeraineServer{
-		dbHandle: handle,
+		dbHandle:   handle,
+		vectorDims: uint32(C.deraine_get_vector_dimensions()),
 	}
+}
+
+func (s *DeraineServer) checkDimensions(n int) error {
+	if uint32(n) != s.vectorDims {
+		return status.Errorf(codes.InvalidArgument, "vector must have exactly %d dimensions, got %d", s.vectorDims, n)
+	}
+	return nil
 }
 
 func (s *DeraineServer) WriteVector(ctx context.Context, req *pb.WriteVectorRequest) (*pb.WriteVectorResponse, error) {
 	if len(req.Data) == 0 {
 		return &pb.WriteVectorResponse{Success: false}, fmt.Errorf("vector data cannot be empty")
+	}
+	if err := s.checkDimensions(len(req.Data)); err != nil {
+		return &pb.WriteVectorResponse{Success: false}, err
 	}
 
 	res := C.deraine_write_vector(
@@ -50,6 +64,9 @@ func (s *DeraineServer) WriteVector(ctx context.Context, req *pb.WriteVectorRequ
 func (s *DeraineServer) SearchKNN(ctx context.Context, req *pb.SearchKNNRequest) (*pb.SearchKNNResponse, error) {
 	if len(req.QueryVector) == 0 {
 		return &pb.SearchKNNResponse{}, fmt.Errorf("query vector cannot be empty")
+	}
+	if err := s.checkDimensions(len(req.QueryVector)); err != nil {
+		return &pb.SearchKNNResponse{}, err
 	}
 
 	k := req.K

@@ -25,6 +25,10 @@ typedef struct {
 
 int32_t deraine_get_status(void* storage_ptr, deraine_status_t* out_status);
 
+// Returns the fixed vector dimension the engine was built for. Callers must
+// send exactly this many floats to deraine_write_vector/deraine_search.
+uint32_t deraine_get_vector_dimensions(void);
+
 int32_t deraine_write_vector(void* storage_ptr, uint64_t index, uint64_t metadata_mask, const float* data, uint32_t len);
 
 int32_t deraine_read_vector(void* storage_ptr, uint64_t index, float* out_data, uint32_t out_len);
