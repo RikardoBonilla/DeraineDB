@@ -53,8 +53,12 @@ docker run -d \
   --name derainedb \
   -p 50051:50051 -p 9090:9090 \
   -v $(pwd)/data:/app/data \
+  -e DERAINE_DB_API_KEY=your-secret-key \
   deraine-db:v2.0-stable
 ```
+> Set `DERAINE_DB_API_KEY` explicitly (as above) so it stays stable across
+> restarts and matches what your clients send. If you omit it, the server
+> generates a random key on every start and prints it once to its logs.
 
 ### 2. Official SDKs
 DeraineDB provides high-performance clients for modern stacks out of the box.
@@ -71,7 +75,8 @@ from derainedb.client import DeraineClient
 from sentence_transformers import SentenceTransformer
 
 embedder = SentenceTransformer('all-MiniLM-L6-v2')
-db = DeraineClient(host="localhost", port=50051)
+# api_key must match the server's DERAINE_DB_API_KEY
+db = DeraineClient(host="localhost", port=50051, api_key="your-secret-key")
 
 # 1. Ingestion (Store memory with a 64-bit metadata category)
 text = "DeraineDB uses Zig and Go for sub-millisecond vector indexing."
@@ -97,12 +102,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
-	"github.com/ricardo/derainedb/sdk/go/client"
+	derainedb "github.com/RikardoBonilla/DeraineDB/sdk/go"
 )
 
 func main() {
-	db, err := client.NewClient("localhost:50051")
+	// apiKey must match the server's DERAINE_DB_API_KEY
+	db, err := derainedb.NewClient("localhost:50051", os.Getenv("DERAINE_DB_API_KEY"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +118,7 @@ func main() {
 	// 1. Ingestion
 	vector := make([]float32, 1536)
 	vector[0] = 0.5 // Simulated embedding
-	err = db.Write(context.Background(), 1, vector, 0x01)
+	err = db.WriteVector(context.Background(), 1, vector, 0x01)
 	if err == nil {
 		fmt.Println("Vector stored successfully.")
 	}
@@ -119,33 +126,34 @@ func main() {
 	// 2. HNSW Search
 	query := make([]float32, 1536)
 	query[0] = 0.5
-	results, _ := db.Search(context.Background(), query, 3, 0x01)
-	
+	results, _ := db.SearchKNN(context.Background(), query, 3, 0x01)
+
 	if len(results) > 0 {
-		fmt.Printf("Match ID: %d | Distance: %.4f\n", results[0].Id, results[0].Distance)
+		fmt.Printf("Match ID: %d | Distance: %.4f\n", results[0].ID, results[0].Distance)
 	}
 }
 ```
 
 **JS/TS SDK Example:**
 ```typescript
-import { DeraineClient } from 'derainedb';
+import { DeraineClient } from './sdk/js/src';
 
 async function main() {
-  const db = new DeraineClient('localhost:50051');
+  // apiKey must match the server's DERAINE_DB_API_KEY
+  const db = new DeraineClient('localhost:50051', process.env.DERAINE_DB_API_KEY);
 
   // 1. Ingestion
   const vector = new Array(1536).fill(0);
   vector[0] = 0.5; // Simulated embedding
-  
-  await db.write({ id: 1, data: vector, metadataMask: 1 });
+
+  await db.write(1, vector, 0x01);
   console.log('Vector stored in DeraineDB.');
 
   // 2. HNSW Search
   const query = new Array(1536).fill(0);
   query[0] = 0.5;
-  
-  const results = await db.search({ query, k: 3, filterMask: 1 });
+
+  const results = await db.search(query, 3, 0x01);
   if (results.length > 0) {
     console.log(`Match ID: ${results[0].id} | Distance: ${results[0].distance}`);
   }

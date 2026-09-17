@@ -1,6 +1,8 @@
 # DeraineDB JS/TS SDK (v2.0.0)
 
-This SDK requires the gRPC protobuf files to be generated for your environment.
+This SDK generates its gRPC/protobuf client code from `../../proto/deraine.proto`
+at build time - you don't need `protoc` installed separately, it's pulled in
+via the `grpc-tools` and `ts-protoc-gen` devDependencies.
 
 ## Setup
 1. Install dependencies:
@@ -8,27 +10,22 @@ This SDK requires the gRPC protobuf files to be generated for your environment.
    npm install
    ```
 
-2. Generate Protobuf files:
-   Make sure you have `protoc` and the `grpc-tools` installed. Run:
-   ```bash
-   mkdir -p src/generated
-   npx grpc_tools_node_protoc \
-     --js_out=import_style=commonjs,binary:src/generated \
-     --grpc_out=grpc_js:src/generated \
-     --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` \
-     -I ../../proto ../../proto/deraine.proto
-   ```
-
-3. Build:
+2. Build (this runs codegen into `src/generated/` and then `tsc`):
    ```bash
    npm run build
    ```
 
+   If you only need to (re)generate the protobuf/gRPC code without a full
+   TypeScript build, run `npm run generate`.
+
 ## Usage
+The server requires an API key on every call (`DERAINE_DB_API_KEY` on the
+server side). Pass the same key as the second constructor argument:
+
 ```typescript
 import { DeraineClient } from './src';
 
-const client = new DeraineClient('localhost:50051');
+const client = new DeraineClient('localhost:50051', process.env.DERAINE_DB_API_KEY);
 const results = await client.search([1.0, 2.0, 3.0, 4.0], 3, 0x01);
 console.log(results);
 ```
