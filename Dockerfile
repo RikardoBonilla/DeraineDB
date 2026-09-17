@@ -11,12 +11,12 @@ RUN apk add --no-cache \
     build-base \
     git
 
-# Install Zig 0.13.0 (Stable target for production)
-RUN curl -O https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz && \
+# Install Zig 0.15.2 (Stable target for production)
+RUN curl -O https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz && \
     mkdir -p /usr/local/zig && \
-    tar -xf zig-linux-x86_64-0.13.0.tar.xz -C /usr/local/zig --strip-components=1 && \
+    tar -xf zig-x86_64-linux-0.15.2.tar.xz -C /usr/local/zig --strip-components=1 && \
     ln -s /usr/local/zig/zig /usr/bin/zig && \
-    rm zig-linux-x86_64-0.13.0.tar.xz
+    rm zig-x86_64-linux-0.15.2.tar.xz
 
 WORKDIR /app
 
@@ -28,10 +28,6 @@ RUN go mod download
 
 # Copy the rest of the source
 COPY . .
-
-# Apply Zig 0.13.0 Compatibility Patch for Docker Build
-RUN cp core/build_0_13.zig core/build.zig && \
-    cp core/build_0_13.zig.zon core/build.zig.zon
 
 # Build Zig Core
 RUN cd core && zig build -Doptimize=ReleaseFast

@@ -3,8 +3,8 @@
 DeraineDB is designed to be built from source with minimal dependencies.
 
 ## Prerequisites
-- **Zig:** v0.13.0 (for the Core Engine)
-- **Go:** v1.25+ (for the Orchestrator)
+- **Zig:** v0.15.2 (for the Core Engine)
+- **Go:** v1.26+ (for the Orchestrator)
 - **Git**
 
 ## 1. Clone the Repository
