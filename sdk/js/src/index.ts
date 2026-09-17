@@ -34,7 +34,7 @@ export class DeraineClient {
 
     public async search(query: number[], k: number, filter_mask: number): Promise<any[]> {
         const req = new SearchKNNRequest();
-        req.setQueryList(query);
+        req.setQueryVectorList(query);
         req.setK(k);
         req.setFilterMask(filter_mask);
 

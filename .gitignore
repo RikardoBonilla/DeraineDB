@@ -51,3 +51,6 @@ go.work.sum
 backup_sprint11*
 test_hnsw*
 sdk/rust/target/
+sdk/js/node_modules/
+sdk/js/dist/
+sdk/js/src/generated/

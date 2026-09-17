@@ -5,13 +5,17 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "tsc"
+        "generate": "mkdir -p src/generated && grpc_tools_node_protoc --js_out=import_style=commonjs,binary:src/generated --grpc_out=grpc_js:src/generated --ts_out=service=grpc-node,mode=grpc-js:src/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` --plugin=protoc-gen-ts=`which protoc-gen-ts` -I ../../proto ../../proto/deraine.proto",
+        "build": "npm run generate && tsc"
     },
     "dependencies": {
         "@grpc/grpc-js": "^1.9.0",
         "google-protobuf": "^3.21.2"
     },
     "devDependencies": {
-        "typescript": "^5.0.0"
+        "typescript": "^5.0.0",
+        "grpc-tools": "^1.12.4",
+        "ts-protoc-gen": "^0.15.0",
+        "@types/google-protobuf": "^3.15.12"
     }
 }

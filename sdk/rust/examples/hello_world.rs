@@ -1,7 +1,7 @@
 use derainedb_rust::Client;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // 1. Connect to DeraineDB (set DERAINE_DB_API_KEY to the server's key)
     let api_key = std::env::var("DERAINE_DB_API_KEY").unwrap_or_default();
     let mut client = Client::connect("http://localhost:50051".into(), api_key).await?;
