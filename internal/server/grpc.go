@@ -151,8 +151,13 @@ func (s *DeraineServer) DeleteVector(ctx context.Context, req *pb.DeleteVectorRe
 }
 
 func (s *DeraineServer) GetStats(ctx context.Context, req *pb.GetStatsRequest) (*pb.GetStatsResponse, error) {
+	var status C.deraine_status_t
+	if res := C.deraine_get_status(s.dbHandle, &status); res != 0 {
+		return &pb.GetStatsResponse{}, fmt.Errorf("failed to get engine status")
+	}
+
 	return &pb.GetStatsResponse{
-		VectorCount:      0,
-		MemoryUsageBytes: 0,
+		VectorCount:      uint64(status.vector_count),
+		MemoryUsageBytes: uint64(C.deraine_get_memory_usage(s.dbHandle)),
 	}, nil
 }

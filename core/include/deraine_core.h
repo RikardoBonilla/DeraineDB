@@ -14,6 +14,9 @@ int32_t deraine_sync(void* storage_ptr);
 
 int32_t deraine_create_snapshot(void* storage_ptr, const char* target_path);
 
+// Returns the total bytes currently mapped for the data + index files.
+uint64_t deraine_get_memory_usage(void* storage_ptr);
+
 int32_t deraine_rebuild_index(void* storage_ptr);
 
 typedef struct {

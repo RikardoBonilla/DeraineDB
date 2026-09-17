@@ -131,6 +131,14 @@ export fn deraine_sync(storage_ptr: *storage.Storage) i32 {
     return 0;
 }
 
+/// Returns the total bytes currently mapped for the data file plus the
+/// HNSW index file (i.e. the engine's real memory/mmap footprint).
+export fn deraine_get_memory_usage(storage_ptr: *storage.Storage) u64 {
+    storage_ptr.lock.lockShared();
+    defer storage_ptr.lock.unlockShared();
+    return @as(u64, storage_ptr.memory.len) + @as(u64, storage_ptr.index_memory.len);
+}
+
 export fn deraine_create_snapshot(storage_ptr: *storage.Storage, target_path_ptr: [*:0]const u8) i32 {
     const path = std.mem.span(target_path_ptr);
     storage_ptr.createSnapshot(path) catch |err| {

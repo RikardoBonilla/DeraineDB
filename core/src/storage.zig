@@ -153,6 +153,7 @@ pub const Storage = struct {
         std.posix.munmap(self.index_memory);
         self.file.close();
         self.index_file.close();
+        self.allocator.free(self.base_path);
     }
 
     fn internal_sync(self: *Storage) StorageError!void {
